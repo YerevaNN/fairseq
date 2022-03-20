@@ -319,7 +319,8 @@ def batch_by_size(
             "Please build Cython components with: "
             "`python setup.py build_ext --inplace`"
         )
-    except ValueError:
+    except ValueError as e:
+        raise e
         raise ValueError(
             "Please build (or rebuild) Cython components with `python setup.py build_ext --inplace`."
         )
