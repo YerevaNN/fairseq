@@ -11,6 +11,8 @@ import argparse
 import json
 import os
 
+EMPTY_INDEX = -1
+
 p = argparse.ArgumentParser(description=__doc__,
                             formatter_class=argparse.RawDescriptionHelpFormatter)
 
@@ -80,6 +82,13 @@ if dataset['filter']:
 
     test_df.replace("", nan_value, inplace=True)
     test_df.dropna(subset=[test_df.columns[ci], test_df.columns[si]], inplace=True)
+else:
+    train_df.replace("", EMPTY_INDEX, inplace=True)
+    train_df.fillna(EMPTY_INDEX, inplace=True)
+    valid_df.replace("", EMPTY_INDEX, inplace=True)
+    valid_df.fillna(EMPTY_INDEX, inplace=True)
+    test_df.replace("", EMPTY_INDEX, inplace=True)
+    test_df.fillna(EMPTY_INDEX, inplace=True)
 
 
 loc = valid_df.columns.get_loc
