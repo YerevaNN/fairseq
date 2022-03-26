@@ -16,17 +16,10 @@ EMPTY_INDEX = -1
 p = argparse.ArgumentParser(description=__doc__,
                             formatter_class=argparse.RawDescriptionHelpFormatter)
 
-p.add_argument("--input", help="input file", type=str)
-p.add_argument("--dataset-name", type=str, default="delaney")
-# p.add_argument("--smile-index", type=int, default=-1)
-# p.add_argument("--class-index",  type=int, default=-2)
-# p.add_argument("--task-count", type=int, default=1)
-# p.add_argument("")
+p.add_argument("--input", help="input file", type=str, required=True)
+p.add_argument("--dataset-name", type=str, required=True)
 p.add_argument("--delimiter", type=str, default=",")
-# p.add_argument("--task-type", type=str, default='classification')
 
-# p.add_argument("--split-type", type=str, default='random')
-# p.add_argument("--filter", type=bool, default=False)
 args = p.parse_args()
 
 np.random.seed(123)
@@ -110,8 +103,10 @@ if dataset["type"] == "regression":
 if dataset["type"] == "classification":
     if len(dataset["class_index"]) >1:
         class_dict = {}
-        for cii in range(1, len(dataset["class_index"])):
-            class_dict["class_train" +str(cii)] =list(map(int, train_df.iloc[:, dataset["class_index"][cii]].tolist()))
+        for cii in range(len(dataset["class_index"])):
+            l = train_df.iloc[:, dataset["class_index"][cii]].tolist()
+            a = list(map(int, l))
+            class_dict["class_train" +str(cii)] = a
             class_dict["class_val" +str(cii)] =list(map(int, valid_df.iloc[:, dataset["class_index"][cii]].tolist()))
             class_dict["class_test" +str(cii)] =list(map(int, test_df.iloc[:, dataset["class_index"][cii]].tolist()))
 
@@ -141,7 +136,7 @@ os.system(f"mkdir /home/gayane/BartLM/Bart/chemical/evaluation_data/{args.datase
 os.system(f"mkdir /home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/tokenized")
 os.system(f"mkdir /home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/processed")
 if len(dataset['class_index'])>1:
-    for i in range(1, len(dataset['class_index'])):
+    for i in range(len(dataset['class_index'])):
         
         os.system(f'mkdir /home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/processed/label{i}')
         with open(f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/processed/label{i}/train.label", "w") as f:
@@ -189,21 +184,24 @@ for name, smiles in zip(names, (smiles_train, smiles_val, smiles_test)):
 
 print("Writing Output Splits")
 if len(dataset['class_index'])>1:
-    pass
-    # for i in range(1, len(dataset['class_index'])):
-    #     for name, targets in zip(names, (class_dict["class_train" +str(i)], class_dict["class_val" +str(i)], class_dict["class_test" +str(i)])):
-    #         print( f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/raw/{i}" + name + ".target")
-    #         print(args.dataset_name )
-    #         new_path = f"/home/gayane/BartLM/Bart/chemyical/evaluation_data/{args.dataset_name}/raw/{i}" + name + ".target"
-    #         y_splits.append(new_path)
-    #         with open(new_path, "w+") as f:
-    #             for target in targets:
-    #                 f.write(f"{str(target)}\n")
+    # pass
+    for i in range(len(dataset['class_index'])):
+        y_splits_current = []
+        for name, targets in zip(names, (class_dict["class_train" +str(i)], class_dict["class_val" +str(i)], class_dict["class_test" +str(i)])):
+            print(args.dataset_name )
+            new_path = f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/raw/" + name + str(i) + ".target"
+            print(new_path)
+            y_splits_current.append(new_path)
+            with open(new_path, "w+") as f:
+                for target in targets:
+                    f.write(f"{str(target)}\n")
+        y_splits.append(y_splits_current)
+    
 else:
     for name, targets in zip(names, (class_train, class_val, class_test)):
-        print( f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/raw/" + name + ".target")
         print(args.dataset_name )
         new_path = f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/raw/" + name + ".target"
+        print(new_path)
         y_splits.append(new_path)
         with open(new_path, "w+") as f:
             for target in targets:
@@ -217,8 +215,9 @@ for path in X_splits:
     print(path)
     print(cur_path)
     splits.append(cur_path)
-    os.system(
-        f"python {args.input}/fairseq/scripts/spm_parallel.py --input {path} --outputs {cur_path} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model")
+    cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {path} --outputs {cur_path} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+    print(cmd)
+    os.system(cmd)
 
 X_splits = splits
 
@@ -229,13 +228,13 @@ os.system(('fairseq-preprocess --only-source '
            f'--destdir "/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/processed/input0" --workers 60 '
            '--srcdict /home/gayane/BartLM/Bart/chemical/tokenizer/chem.vocab.fs'))
 if dataset["type"] == "classification":
-    if len(dataset["class_index"]) >1:
-        for i in range(1, len(dataset['class_index'])):
+    if len(dataset["class_index"]) > 1:
+        for i in range(len(dataset['class_index'])):
             os.system(('fairseq-preprocess '
             '--only-source '
-            f'--trainpref "{class_dict["class_train" +str(i)][0]}" '
-            f'--validpref "{class_dict["class_val" +str(i)][1]}" '
-            f'--testpref "{class_dict["class_test" +str(i)][2]}" '
+            f'--trainpref "{y_splits[i][0]}" '
+            f'--validpref "{y_splits[i][1]}" '
+            f'--testpref "{y_splits[i][2]}" '
             f'--destdir "/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/processed/label{i}" --workers 60 '))
 
     
