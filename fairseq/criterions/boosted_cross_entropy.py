@@ -4,15 +4,10 @@
 # LICENSE file in the root directory of this source tree.
 
 import math
-from dataclasses import dataclass
 
-import torch.nn.functional as F
 from fairseq import metrics, utils
-from fairseq.criterions import FairseqCriterion, register_criterion
+from fairseq.criterions import register_criterion
 from fairseq.criterions.cross_entropy import CrossEntropyCriterion, CrossEntropyCriterionConfig
-from fairseq.dataclass import FairseqDataclass
-from omegaconf import II
-
 
 
 @register_criterion("boosted_cross_entropy", dataclass=CrossEntropyCriterionConfig)
@@ -28,9 +23,17 @@ class BoostedCrossEntropyCriterion(CrossEntropyCriterion):
         2) the sample size, which is used as the denominator for the gradient
         3) logging outputs to display while training
         """
-        net_output = model(**sample["net_input"])
-        net_output += sample['boosted_logits']
-        loss, _ = self.compute_loss(model, net_output, sample, reduce=reduce)
+        net_output, net_inner_states = model(**sample["net_input"])
+
+        src_tokens = sample['net_input']['src_tokens'].cpu()
+        sample['boosted_logits'], sample_inner_states = self.task.datasets['train'].get_batch_boosted_logits(src_tokens)
+        sample['boosted_logits'] = sample['boosted_logits'].to(net_output.device)
+
+        boosted_output = self.task.datasets['train'].boost(sample['boosted_logits'], net_output, shrinkage=self.task.beta)
+        merged_inner_states = self.task.datasets['train'].merge_inner_state(sample_inner_states, net_inner_states)
+
+        output = (boosted_output, net_inner_states)
+        loss, _ = self.compute_loss(model, output, sample, reduce=reduce)
         sample_size = (
             sample["target"].size(0) if self.sentence_avg else sample["ntokens"]
         )
