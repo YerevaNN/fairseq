@@ -24,7 +24,7 @@ class BoostedLanguageModelingConfig(LanguageModelingConfig):
             "help": "comma-separated list of previous LM directories to boost on"},
     )
     alpha: float = field(
-        default=1.0, metadata={"help": "shrinkage rate of previous_lms"}
+        default=1.0, metadata={"help": "shrinkage rate of previous_lms: -1 parameterize, -2 will linearly decrease"}
     )
     beta: float = field(
         default=1.0, metadata={"help": "shrinkage rate of current model: -1 parameterize, -2 will linearly increase"}
@@ -70,12 +70,6 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
         # self.device = "cpu"
         self.alpha = args.alpha
         self.beta = args.beta
-        # if args.beta == -1:
-        #     self.beta = 0
-        #     self._beta = args.beta
-        # else:
-        #     self.beta = args.beta
-        #     self._beta = args.beta
         self.model_better_init = args.model_better_init
 
         model_paths = args.previous_lms.split(",")
