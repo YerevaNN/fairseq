@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import unicode_literals
 
+from sklearn.model_selection import train_test_split
 from ast import arg
 import numpy as np
 import deepchem as dc
@@ -10,6 +11,7 @@ import pandas as pd
 import argparse
 import json
 import os
+
 
 EMPTY_INDEX = -1
 
@@ -24,70 +26,155 @@ args = p.parse_args()
 
 np.random.seed(123)
 
+os.system(f'mkdir -p /home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}')
+os.system(f'mkdir -p /home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/{args.dataset_name}')
+path = f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/{args.dataset_name}/"
+
 with open('/home/gayane/BartLM/fairseq/scripts/datasets.json') as f:
     datasets_json = json.load(f)
 
 dataset = datasets_json[args.dataset_name]
+si = dataset['smiles_index']
 
-v = eval(f"dc.molnet.load_{dataset['load_name']}")
-tasks, datasets, transformers = v(splitter=dataset['split_type'],
-                                            featurizer = 'ECFP')
+if args.dataset_name == "regAcuteOralToxicity":
+    print (args.dataset_name)
+    file=open(path + "AcuteOralToxicity.txt")
+    file = file.read().split('\n')
+    sm = list()
+    col = list()
+    for i in range(1,len(file)):
+        sm.append(file[i].split('\t')[4].strip('"'))
+        col.append(file[i].split('\t')[-3])
 
-train_data, valid_data, test_data = datasets
+    d = {"Canonical_QSARr": sm, "LD50_mgkg": col }
+
+    df = pd.DataFrame(d) 
+    df['LD50_mgkg'] = df['LD50_mgkg'].apply(pd.to_numeric, errors='coerce')
+    df = df.dropna(inplace=True)
+    df.to_csv(path +"AcuteOralToxicity.csv")
+
+elif  args.dataset_name == "classAcuteOralToxicity":
+    print (args.dataset_name)
+    file=open(path + "AcuteOralToxicity.txt")
+    file = file.read().split('\n')
+    sm = list()
+    col = list()
+    for i in range(1,len(file)):
+        sm.append(file[i].split('\t')[4].strip('"'))
+        col.append(file[i].split('\t')[-2])
+
+    d = {"Canonical_QSARr": sm, "EPA_category": col }
+
+    df = pd.DataFrame(d) 
+    # df['EPA_category'] = (df['EPA_category'] !='NA').astype(int)
+    df['EPA_category'] = df['EPA_category'].apply (pd.to_numeric, errors='coerce')
+    df = df.dropna()
+
+    df.to_csv(path +"AcuteOralToxicity.csv")
+
+elif args.dataset_name == "Genotoxicity" :
+    
+    file=open(path + "Genotoxicity.txt")
+    file = file.read().split('\n')
+    sm = list()
+    col = list()
+
+    for i in range(1,len(file)):
+        sm.append(file[i].split('\t')[0].strip('"'))
+        col.append(file[i].split('\t')[1])
+    bool_col = [int(i == "positive") for i in col]
+
+    d = {"SMILES": sm, "Classification": bool_col }
+    df = pd.DataFrame(d) 
+    df = df.dropna()
+    df.to_csv(path +"AcuteOralToxicity.csv")
+
+elif args.dataset_name == "Ames" :
+    df = pd.read_csv(path + "Ames.csv")
+    print(df.columns)
+    print(df.head(2))
+    df = df.dropna()
+ 
+else:
+    # For MoleculeNet data
+    
+    v = eval(f"dc.molnet.load_{dataset['load_name']}")
+    tasks, datasets, transformers = v(splitter=dataset['split_type'],
+                                                featurizer = 'ECFP')
+
+    train_data, valid_data, test_data = datasets
 
 
-train_df = train_data.to_dataframe()
-valid_df = valid_data.to_dataframe() 
-test_df = test_data.to_dataframe() 
+    train_df = train_data.to_dataframe()
+    valid_df = valid_data.to_dataframe() 
+    test_df = test_data.to_dataframe() 
 
-os.system(f'mkdir /home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}')
-os.system(f'mkdir /home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/{args.dataset_name}')
 
-# Remove some not usefull comlumns
-remove_cols = [col for col in valid_df.columns if 'X' in col]
-valid_df.drop(remove_cols, axis='columns', inplace=True)
-train_df.drop(remove_cols, axis='columns', inplace=True)
-test_df.drop(remove_cols, axis='columns', inplace=True)
-remove_cols = [col for col in valid_df.columns if 'w' in col]
-valid_df.drop(remove_cols, axis='columns', inplace=True)
-train_df.drop(remove_cols, axis='columns', inplace=True)
-test_df.drop(remove_cols, axis='columns', inplace=True)
+    # Remove some not usefull comlumns
+    remove_cols = [col for col in valid_df.columns if 'X' in col]
+    valid_df.drop(remove_cols, axis='columns', inplace=True)
+    train_df.drop(remove_cols, axis='columns', inplace=True)
+    test_df.drop(remove_cols, axis='columns', inplace=True)
+    remove_cols = [col for col in valid_df.columns if 'w' in col]
+    valid_df.drop(remove_cols, axis='columns', inplace=True)
+    train_df.drop(remove_cols, axis='columns', inplace=True)
+    test_df.drop(remove_cols, axis='columns', inplace=True)
 
-print(train_df.head())
+    print(train_df.head())
+
+    if dataset['filter']:
+        assert len(dataset['class_index']) == 1, "We do not want to filter multi-task datasets."
+        ci = dataset['class_index'][0]
+
+        nan_value = float("NaN")
+        train_df.replace("", nan_value, inplace=True)
+        train_df.dropna(subset=[train_df.columns[ci], train_df.columns[si]], inplace=True)
+
+        valid_df.replace("", nan_value, inplace=True)
+        valid_df.dropna(subset=[valid_df.columns[ci], valid_df.columns[si]], inplace=True)
+
+        test_df.replace("", nan_value, inplace=True)
+        test_df.dropna(subset=[test_df.columns[ci], test_df.columns[si]], inplace=True)
+    else:
+        train_df.replace("", EMPTY_INDEX, inplace=True)
+        train_df.fillna(EMPTY_INDEX, inplace=True)
+        valid_df.replace("", EMPTY_INDEX, inplace=True)
+        valid_df.fillna(EMPTY_INDEX, inplace=True)
+        test_df.replace("", EMPTY_INDEX, inplace=True)
+        test_df.fillna(EMPTY_INDEX, inplace=True)
+
+if args.dataset_name == "Ames" or args.dataset_name == "classAcuteOralToxicity" or args.dataset_name == "regAcuteOralToxicity" or args.dataset_name == "Genotoxicity"  :
+
+    train_ratio = 0.8
+    validation_ratio = 0.1
+    test_ratio = 0.1
+
+    x_train, x_test, y_train, y_test = train_test_split(df[dataset['smiles_col_name']], df[dataset["label_col_name"]], test_size=1 - train_ratio)
+
+    x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_ratio/(test_ratio + validation_ratio)) 
+    x_train = x_train.to_list()
+    y_train = y_train.to_list()
+    x_val = x_val.to_list()
+    y_val = y_val.to_list()
+    x_test = x_test.to_list()
+    y_test = y_test.to_list()
+
+    train_df = pd.DataFrame({dataset['smiles_col_name']: x_train, dataset["label_col_name"]: y_train })    
+    valid_df = pd.DataFrame({dataset['smiles_col_name']: x_val, dataset["label_col_name"]: y_val })    
+    test_df = pd.DataFrame({dataset['smiles_col_name']: x_test, dataset["label_col_name"]: y_test }) 
+
 test_df.to_csv(f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/{args.dataset_name}/test_{args.dataset_name}.csv")
 
 train_df.to_csv(f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/{args.dataset_name}/train_{args.dataset_name}.csv")
 
 valid_df.to_csv(f"/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/{args.dataset_name}/valid_{args.dataset_name}.csv")
 
-si = dataset['smiles_index']
-
-if dataset['filter']:
-    assert len(dataset['class_index']) == 1, "We do not want to filter multi-task datasets."
-    ci = dataset['class_index'][0]
-
-    nan_value = float("NaN")
-    train_df.replace("", nan_value, inplace=True)
-    train_df.dropna(subset=[train_df.columns[ci], train_df.columns[si]], inplace=True)
-
-    valid_df.replace("", nan_value, inplace=True)
-    valid_df.dropna(subset=[valid_df.columns[ci], valid_df.columns[si]], inplace=True)
-
-    test_df.replace("", nan_value, inplace=True)
-    test_df.dropna(subset=[test_df.columns[ci], test_df.columns[si]], inplace=True)
-else:
-    train_df.replace("", EMPTY_INDEX, inplace=True)
-    train_df.fillna(EMPTY_INDEX, inplace=True)
-    valid_df.replace("", EMPTY_INDEX, inplace=True)
-    valid_df.fillna(EMPTY_INDEX, inplace=True)
-    test_df.replace("", EMPTY_INDEX, inplace=True)
-    test_df.fillna(EMPTY_INDEX, inplace=True)
-
 
 loc = valid_df.columns.get_loc
 
 
 if dataset["type"] == "regression":
+    print(len(dataset['class_index']))
     assert len(dataset['class_index']) == 1, "Regression tasks are always single-task."
     ci = dataset['class_index'][0]
     mi = dataset['minimum']
@@ -245,5 +332,3 @@ if dataset["type"] == "classification":
             f'--validpref "{y_splits[1]}" '
             f'--testpref "{y_splits[2]}" '
             f'--destdir "/home/gayane/BartLM/Bart/chemical/evaluation_data/{args.dataset_name}/processed/label" --workers 60 '))
-
-    
