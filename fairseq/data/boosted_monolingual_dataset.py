@@ -75,86 +75,63 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
         super().__init__(dataset)
         self.__dict__.update(kwargs)
 
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if not device else device
-        self.logits_save_dir = Path("/home/tmyn/moe/hdd/.cache/boosted_logits")
-        os.makedirs(self.logits_save_dir, exist_ok=True)
-        # Implementation 2
-        # self.cached_logits = []
-        # for i in tqdm(range(len(self))):
-        #     item = super().__getitem__(index)
-        #     item_source = item["source"]
-        #     self.cached_logits.append(self.get_boosted_logits(item_source))
+        # self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if not device else device
+        self.device = device
+        # /hdd/.cache/boosted_logits
+        if self.logits_cache_dir:
+            os.makedirs(self.logits_cache_dir, exist_ok=True)
 
-        # Implementation 2++
-        # batch items, collate them, do batch processing
-
-    # # Implementation 1. Dynamically process every sample as it's called
-    # def __getitem__(self, index):
-    #     item = super().__getitem__(index)
-    #     item_source = item["source"]
-    #     item['boosted_logits'] = self.get_boosted_logits(item_source)
-    #     return item
-
-    # Implementation 2
-    # def __getitem__(self, index):
-    #     return self.cached_logits[index]
-
-    # Implementation 2++
     def __getitem__(self, index):
         return super().__getitem__(index)
-
-    # Implementation 1.
-    # def get_boosted_logits(self, item_source):
-    #     logits = None
-    #     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    #     # item_source = item_source.to(device)
-    #     for model in self.models:
-    #         # model_logits, _ = model.extract_features(item_source.unsqueeze(0), encoder_out=None)
-    #         model_logits, _ = model(item_source.unsqueeze(0), encoder_out=None)
-    #         model_logits = model_logits.detach().cpu()
-    #         if logits is not None:
-    #             logits = self.boost(logits, model_logits)
-    #         else:
-    #             logits = model_logits
-
-    #     return logits
 
     def _hash(self, name):
         return hashlib.md5(bytes(name, encoding='utf-8')).hexdigest()
 
-    # Implementation 2++
     def get_batch_boosted_logits(self, item_sources):
-        item_sources_hash = self._hash(str(item_sources.cpu().detach().numpy())) + ".pt"
-        batch_cache_path = self.logits_save_dir.joinpath(item_sources_hash)
+        if self.logits_cache_dir:
+            item_sources_hash = self._hash(str(item_sources.cpu().detach().numpy())) + ".pt"
+            batch_cache_path = self.logits_cache_dir.joinpath(item_sources_hash)
 
-        if not batch_cache_path.is_file():
-            boosted_logits, merged_inner_states = self.batch_boosted_logits(item_sources)
-            logger.info(f"creating a cache at: {batch_cache_path}")
-            torch.save((boosted_logits, merged_inner_states), batch_cache_path)
+            if not batch_cache_path.is_file():
+                boosted_logits, merged_inner_states = self.batch_boosted_logits(item_sources)
+                logger.info(f"creating a cache at: {batch_cache_path}")
+                # start = time.time()
+                torch.save((boosted_logits.detach().cpu(), merged_inner_states), batch_cache_path)
+                # end = time.time()
+                # logger.info(f"created a cache, took: {end-start}s")
+            else:
+                logger.info(f"reading from cache: {batch_cache_path}")
+                # start = time.time()
+                boosted_logits, merged_inner_states = torch.load(batch_cache_path)
+                # end = time.time()
+                # logger.info(f"read a cache, took: {end-start}s")
         else:
-            logger.info(f"reading from cache: {batch_cache_path}")
-            boosted_logits, merged_inner_states = torch.load(batch_cache_path)
-
-        return boosted_logits, merged_inner_states
+            logger.info(f"evaluating")
+            # start = time.time()
+            # boosted_logits, merged_inner_states = self.batch_boosted_logits(item_sources)
+            # end = time.time()
+            # logger.info(f"evaluated, took: {end-start}s")
+            # return boosted_logits, merged_inner_states
+            return self.batch_boosted_logits(item_sources)
 
     def batch_boosted_logits(self, item_sources):
         logits = None
         inner_states = None
 
         item_sources = item_sources.to(self.device)
-        # with torch.no_grad():
-        for model in WeakModels.weak_models:
-            model.eval()
-            # model_logits, _ = model.extract_features(item_sources, encoder_out=None)
-            model_logits, model_inner_states = model(item_sources, encoder_out=None)
-            model_logits = model_logits.detach().cpu()
-            if logits is not None:
-                # shrinkage = alpha
-                logits = self.boost(logits, model_logits, self.alpha)
-                inner_states = self.merge_inner_state(inner_states, model_inner_states)
-            else:
-                logits = model_logits
-                inner_states = model_inner_states
+        with torch.no_grad():
+            for model in WeakModels.weak_models:
+                model.eval()
+                # model_logits, _ = model.extract_features(item_sources, encoder_out=None)
+                model_logits, model_inner_states = model(item_sources, encoder_out=None)
+                model_logits = model_logits.detach().cpu()
+                if logits is not None:
+                    # shrinkage = alpha
+                    logits = self.boost(logits, model_logits, self.alpha)
+                    inner_states = self.merge_inner_state(inner_states, model_inner_states)
+                else:
+                    logits = model_logits
+                    inner_states = model_inner_states
 
         del item_sources
         return logits, inner_states
@@ -168,9 +145,7 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
         return model_inner_states
 
     def boost(self, logits, model_logits, shrinkage: float = 1.0):
-        boosted_logits = logits + (shrinkage * model_logits)
-
-        return boosted_logits
+        return logits + (shrinkage * model_logits)
 
     def collater(self, samples):
         return collate(

@@ -30,9 +30,10 @@ class BoostedCrossEntropyCriterion(CrossEntropyCriterion):
         sample['boosted_logits'] = sample['boosted_logits'].to(net_output.device)
 
         boosted_output = self.task.datasets['train'].boost(sample['boosted_logits'], net_output, shrinkage=self.task.beta)
-        # merged_inner_states = self.task.datasets['train'].merge_inner_state(sample_inner_states, net_inner_states)
+        # sample['boosted_logits'].cpu()
+        # # merged_inner_states = self.task.datasets['train'].merge_inner_state(sample_inner_states, net_inner_states)
 
-        # output = (boosted_output, merged_inner_states)
+        # # output = (boosted_output, merged_inner_states)
         output = (boosted_output, net_inner_states)
         loss, _ = self.compute_loss(model, output, sample, reduce=reduce)
         sample_size = (

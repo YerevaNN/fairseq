@@ -32,6 +32,11 @@ class BoostedLanguageModelingConfig(LanguageModelingConfig):
     model_better_init: bool = field(
         default=False, metadata={"help": "initialize the model with the previous lms params"}
     )
+    logits_cache_dir: str = field(
+        default="",
+        metadata={
+            "help": "dir to cache the logits, if not specified will not be cached"},
+    )
 
 
 @register_task("boosted_language_modeling", dataclass=BoostedLanguageModelingConfig)
@@ -66,11 +71,14 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
 
     def __init__(self, args, dictionary, output_dictionary=None, targets=None):
         super().__init__(args, dictionary, output_dictionary, targets)
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        # self.device = "cpu"
+        # self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = "cpu"
+        # self.alpha = torch.tensor([args.alpha], requires_grad=True)
+        # self.beta = torch.tensor([args.beta], requires_grad=True)
         self.alpha = args.alpha
         self.beta = args.beta
         self.model_better_init = args.model_better_init
+        self.logits_cache_dir = args.logits_cache_dir
 
         model_paths = args.previous_lms.split(",")
 
@@ -92,7 +100,7 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
         super().load_dataset(split, epoch, combine)
 
         self.datasets[split] = BoostedMonolingualDataset(
-            self.datasets[split], self.device, alpha=self.alpha, beta=self.beta, model_better_init=self.model_better_init)
+            self.datasets[split], self.device, alpha=self.alpha, beta=self.beta, model_better_init=self.model_better_init, logits_cache_dir=self.logits_cache_dir)
 
     def build_model(self, args, from_checkpoint=False):
         model = super().build_model(args, from_checkpoint)
