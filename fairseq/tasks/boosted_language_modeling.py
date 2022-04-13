@@ -71,8 +71,7 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
 
     def __init__(self, args, dictionary, output_dictionary=None, targets=None):
         super().__init__(args, dictionary, output_dictionary, targets)
-        # self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.device = "cpu"
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # self.alpha = torch.tensor([args.alpha], requires_grad=True)
         # self.beta = torch.tensor([args.beta], requires_grad=True)
         self.alpha = args.alpha

@@ -106,7 +106,7 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
                 # end = time.time()
                 # logger.info(f"read a cache, took: {end-start}s")
         else:
-            logger.info(f"evaluating")
+            # logger.info(f"evaluating")
             # start = time.time()
             # boosted_logits, merged_inner_states = self.batch_boosted_logits(item_sources)
             # end = time.time()
@@ -133,7 +133,6 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
                     logits = model_logits
                     inner_states = model_inner_states
 
-        del item_sources
         return logits, inner_states
 
     def merge_inner_state(self, inner_states, model_inner_states):
@@ -145,6 +144,12 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
         return model_inner_states
 
     def boost(self, logits, model_logits, shrinkage: float = 1.0):
+        if logits.device != model_logits.device:
+            if logits.device.type == "cuda":
+                model_logits = model_logits.to(logits.device)
+            elif model_logits.device.type == "cuda":
+                logits = logits.to(model_logits.device)
+ 
         return logits + (shrinkage * model_logits)
 
     def collater(self, samples):
