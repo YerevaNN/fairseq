@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from fairseq.data.boosted_monolingual_dataset import (BoostedMonolingualDataset, WeakModels)
 from fairseq.models.transformer_lm import TransformerLanguageModel
 import torch
+from torch.nn.parameter import Parameter
 from fairseq.data import MonolingualDataset
 from fairseq.tasks import register_task
 from fairseq.tasks.language_modeling import LanguageModelingConfig, LanguageModelingTask
@@ -22,12 +23,6 @@ class BoostedLanguageModelingConfig(LanguageModelingConfig):
         default="",
         metadata={
             "help": "comma-separated list of previous LM directories to boost on"},
-    )
-    alpha: float = field(
-        default=1.0, metadata={"help": "shrinkage rate of previous_lms: -1 parameterize, -2 will linearly decrease"}
-    )
-    beta: float = field(
-        default=1.0, metadata={"help": "shrinkage rate of current model: -1 parameterize, -2 will linearly increase"}
     )
     model_better_init: bool = field(
         default=False, metadata={"help": "initialize the model with the previous lms params"}
@@ -72,20 +67,16 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
     def __init__(self, args, dictionary, output_dictionary=None, targets=None):
         super().__init__(args, dictionary, output_dictionary, targets)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        # self.alpha = torch.tensor([args.alpha], requires_grad=True)
-        # self.beta = torch.tensor([args.beta], requires_grad=True)
-        self.alpha = args.alpha
-        self.beta = args.beta
         self.model_better_init = args.model_better_init
         self.logits_cache_dir = args.logits_cache_dir
 
         model_paths = args.previous_lms.split(",")
 
         if WeakModels.weak_models is None:
-            WeakModels.weak_models = torch.nn.ModuleList().extend(
-                TransformerLanguageModel.from_pretrained(
-                    x, checkpoint_file='checkpoint_best.pt', data_name_or_path=args.data).models[0]
-                for x in model_paths)
+            WeakModels.weak_models = torch.nn.ModuleDict()
+            for model_path in model_paths:
+                WeakModels.weak_models.add_module(model_path, TransformerLanguageModel.from_pretrained(
+                    model_path, checkpoint_file='checkpoint_best.pt', data_name_or_path=args.data).models[0])
             WeakModels.weak_models = WeakModels.weak_models.to(self.device)
 
     def load_dataset(
@@ -99,7 +90,7 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
         super().load_dataset(split, epoch, combine)
 
         self.datasets[split] = BoostedMonolingualDataset(
-            self.datasets[split], self.device, alpha=self.alpha, beta=self.beta, model_better_init=self.model_better_init, logits_cache_dir=self.logits_cache_dir)
+            self.datasets[split], self.device, model_better_init=self.model_better_init, logits_cache_dir=self.logits_cache_dir)
 
     def build_model(self, args, from_checkpoint=False):
         model = super().build_model(args, from_checkpoint)

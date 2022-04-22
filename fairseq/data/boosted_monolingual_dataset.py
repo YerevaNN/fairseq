@@ -120,17 +120,19 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
 
         item_sources = item_sources.to(self.device)
         with torch.no_grad():
-            for model in WeakModels.weak_models:
+            for model in WeakModels.weak_models.values():
                 model.eval()
+                if not hasattr(model, "shrinkage"):
+                    model.shrinkage = 1.0
                 # model_logits, _ = model.extract_features(item_sources, encoder_out=None)
                 model_logits, model_inner_states = model(item_sources, encoder_out=None)
-                model_logits = model_logits.detach().cpu()
+
+                # model_logits = model_logits.detach().cpu()
                 if logits is not None:
-                    # shrinkage = alpha
-                    logits = self.boost(logits, model_logits, self.alpha)
+                    logits = self.boost(logits, model_logits, model.shrinkage)
                     inner_states = self.merge_inner_state(inner_states, model_inner_states)
                 else:
-                    logits = model_logits
+                    logits = model.shrinkage * model_logits
                     inner_states = model_inner_states
 
         return logits, inner_states
@@ -143,14 +145,22 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
             del inner_state
         return model_inner_states
 
-    def boost(self, logits, model_logits, shrinkage: float = 1.0):
-        if logits.device != model_logits.device:
-            if logits.device.type == "cuda":
-                model_logits = model_logits.to(logits.device)
+    def boost(self, prev_logits, model_logits, shrinkage):
+        if prev_logits.device != model_logits.device:
+            if prev_logits.device.type == "cuda":
+                model_logits = model_logits.to(prev_logits.device)
+                shrinkage = shrinkage.to(prev_logits.device)
             elif model_logits.device.type == "cuda":
-                logits = logits.to(model_logits.device)
- 
-        return logits + (shrinkage * model_logits)
+                prev_logits = prev_logits.to(model_logits.device)
+
+        # model_logits.data = shrinkage.data * model_logits.data + prev_logits.data
+        # return model_logits
+
+        model_logits = shrinkage * model_logits
+        model_logits.data += prev_logits.data
+        return model_logits
+
+        # return shrinkage * model_logits + prev_logits
 
     def collater(self, samples):
         return collate(
@@ -160,3 +170,14 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
             self.dataset.fixed_pad_length,
             self.dataset.pad_to_bsz,
         )
+
+    def get_weak_learners_shrinkages(self):
+        shrinkages = {}
+        for model_name in WeakModels.weak_models:
+            logg_name = f"shrinkage_{model_name}"
+            if isinstance(WeakModels.weak_models[model_name].shrinkage, torch.nn.Parameter):
+                shrinkages[logg_name] = WeakModels.weak_models[model_name].shrinkage.item()
+            else:
+                shrinkages[logg_name] = WeakModels.weak_models[model_name].shrinkage
+
+        return shrinkages

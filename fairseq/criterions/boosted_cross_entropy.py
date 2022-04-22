@@ -5,9 +5,42 @@
 
 import math
 
+from dataclasses import dataclass, field
+
 from fairseq import metrics, utils
 from fairseq.criterions import register_criterion
 from fairseq.criterions.cross_entropy import CrossEntropyCriterion, CrossEntropyCriterionConfig
+from fairseq.data.boosted_monolingual_dataset import BoostedMonolingualDataset
+
+import torch
+from torch.nn.parameter import Parameter
+
+from fairseq.models import register_model
+from fairseq.models.transformer_lm import TransformerLanguageModel, TransformerLanguageModelConfig
+
+
+@dataclass
+class WithShrinkTransformerLanguageModelConfig(TransformerLanguageModelConfig):
+    net_shrinkage: float = field(
+        default=1.0, metadata={"help": "initial shrinkage coefficient of the current network"}
+    )
+
+
+@register_model("with_shrink_transformer_lm", dataclass=WithShrinkTransformerLanguageModelConfig)
+class WithShrinkTransformerLanguageModel(TransformerLanguageModel):
+    def __init__(self, decoder):
+        super().__init__(decoder)
+
+    def forward(self, *args, **kwargs):
+        out = super().forward(*args, **kwargs)
+        return out
+
+    @classmethod
+    def build_model(cls, args, task):
+        model = super().build_model(args, task)
+        model.shrinkage = Parameter(torch.tensor(args.net_shrinkage, requires_grad=True, device="cuda"))
+
+        return model
 
 
 @register_criterion("boosted_cross_entropy", dataclass=CrossEntropyCriterionConfig)
@@ -23,17 +56,22 @@ class BoostedCrossEntropyCriterion(CrossEntropyCriterion):
         2) the sample size, which is used as the denominator for the gradient
         3) logging outputs to display while training
         """
+        train_dataset: BoostedMonolingualDataset = self.task.datasets['train']
+
         net_output, net_inner_states = model(**sample["net_input"])
+        if not hasattr(model, "shrinkage"):
+            model.shrinkage = 1.0
+        # else:
+        #     model.shrinkage.to(net_output.device)
 
-        sample['boosted_logits'], sample_inner_states = self.task.datasets['train'].get_batch_boosted_logits(
+        sample['boosted_logits'], _ = train_dataset.get_batch_boosted_logits(
             sample['net_input']['src_tokens'])
-        # sample['boosted_logits'] = sample['boosted_logits'].to(net_output.device)
 
-        boosted_output = self.task.datasets['train'].boost(sample['boosted_logits'], net_output, shrinkage=self.task.beta)
-        # # merged_inner_states = self.task.datasets['train'].merge_inner_state(sample_inner_states, net_inner_states)
+        boosted_output = train_dataset.boost(sample['boosted_logits'], net_output,
+                                             shrinkage=model.shrinkage)
 
-        # # output = (boosted_output, merged_inner_states)
         output = (boosted_output, net_inner_states)
+
         loss, _ = self.compute_loss(model, output, sample, reduce=reduce)
         sample_size = (
             sample["target"].size(0) if self.sentence_avg else sample["ntokens"]
@@ -43,7 +81,12 @@ class BoostedCrossEntropyCriterion(CrossEntropyCriterion):
             "ntokens": sample["ntokens"],
             "nsentences": sample["target"].size(0),
             "sample_size": sample_size,
+            "shrinkage_model": model.shrinkage
         }
+
+        logging_shrinkage = train_dataset.get_weak_learners_shrinkages()
+        logging_output.update(logging_shrinkage)
+
         return loss, sample_size, logging_output
 
     @staticmethod
@@ -68,6 +111,16 @@ class BoostedCrossEntropyCriterion(CrossEntropyCriterion):
             metrics.log_derived(
                 "ppl", lambda meters: utils.get_perplexity(meters["loss"].avg)
             )
+
+        metrics.log_scalar(
+            "shrinkage_model", logging_outputs[-1]["shrinkage_model"].item()
+        )
+
+        for key in logging_outputs[-1]:
+            if "shrinkage" in key:
+                metrics.log_scalar(
+                    key, logging_outputs[-1][key]
+                )
 
     @staticmethod
     def logging_outputs_can_be_summed() -> bool:
