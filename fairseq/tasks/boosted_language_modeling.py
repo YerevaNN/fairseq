@@ -74,8 +74,8 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
 
         if WeakModels.weak_models is None:
             WeakModels.weak_models = torch.nn.ModuleDict()
-            for model_path in model_paths:
-                WeakModels.weak_models.add_module(model_path, TransformerLanguageModel.from_pretrained(
+            for i, model_path in enumerate(model_paths):
+                WeakModels.weak_models.add_module(str(i), TransformerLanguageModel.from_pretrained(
                     model_path, checkpoint_file='checkpoint_best.pt', data_name_or_path=args.data).models[0])
             WeakModels.weak_models = WeakModels.weak_models.to(self.device)
 

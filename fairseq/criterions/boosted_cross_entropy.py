@@ -64,10 +64,10 @@ class BoostedCrossEntropyCriterion(CrossEntropyCriterion):
         # else:
         #     model.shrinkage.to(net_output.device)
 
-        sample['boosted_logits'], _ = train_dataset.get_batch_boosted_logits(
+        sample['boosted_logits'] = train_dataset.get_batch_boosted_logits(
             sample['net_input']['src_tokens'])
 
-        boosted_output = train_dataset.boost(sample['boosted_logits'], net_output,
+        boosted_output = train_dataset.boost(sample['boosted_logits'].detach(), net_output,
                                              shrinkage=model.shrinkage)
 
         output = (boosted_output, net_inner_states)

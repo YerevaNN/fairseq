@@ -119,6 +119,7 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
         inner_states = None
 
         item_sources = item_sources.to(self.device)
+        # torch.inference_mode()
         with torch.no_grad():
             for model in WeakModels.weak_models.values():
                 model.eval()
@@ -130,12 +131,22 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
                 # model_logits = model_logits.detach().cpu()
                 if logits is not None:
                     logits = self.boost(logits, model_logits, model.shrinkage)
-                    inner_states = self.merge_inner_state(inner_states, model_inner_states)
+                    # inner_states = self.merge_inner_state(inner_states, model_inner_states)
                 else:
                     logits = model.shrinkage * model_logits
-                    inner_states = model_inner_states
+                    # inner_states = model_inner_states
 
-        return logits, inner_states
+        return logits  # , inner_states
+
+    def cat_boosted_logits(self, item_sources):
+        logits = []
+        item_sources = item_sources.to(self.device)
+        with torch.no_grad():
+            for model in WeakModels.weak_models.values():
+                model.eval()
+                model_logits = model(item_sources, encoder_out=None)
+                logits.append(model_logits)
+        return torch.stack(logits, dim=0)  # , inner_states
 
     def merge_inner_state(self, inner_states, model_inner_states):
         for inner_state, model_inner_state in zip(inner_states['inner_states'], model_inner_states['inner_states']):
@@ -157,7 +168,8 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
         # return model_logits
 
         model_logits = shrinkage * model_logits
-        model_logits.data += prev_logits.data
+        # model_logits.data += prev_logits.data
+        model_logits = model_logits + prev_logits
         return model_logits
 
         # return shrinkage * model_logits + prev_logits
