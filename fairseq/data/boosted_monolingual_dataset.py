@@ -114,65 +114,52 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
             # return boosted_logits, merged_inner_states
             return self.batch_boosted_logits(item_sources)
 
+    # this can be used when the GPU memory is limited,
+    # though it might cause numerical overflow, because of accumulating logits in a single tensor
     def batch_boosted_logits(self, item_sources):
-        logits = None
-        inner_states = None
-
         item_sources = item_sources.to(self.device)
-        # torch.inference_mode()
-        with torch.no_grad():
+        vocab_size = len(self.dataset.vocab.count)
+        logits = torch.zeros((item_sources.shape[0], item_sources.shape[1], vocab_size), device=self.device)
+
+        with torch.inference_mode():
             for model in WeakModels.weak_models.values():
-                model.eval()
-                if not hasattr(model, "shrinkage"):
-                    model.shrinkage = 1.0
-                # model_logits, _ = model.extract_features(item_sources, encoder_out=None)
-                model_logits, model_inner_states = model(item_sources, encoder_out=None)
-
-                # model_logits = model_logits.detach().cpu()
-                if logits is not None:
-                    logits = self.boost(logits, model_logits, model.shrinkage)
-                    # inner_states = self.merge_inner_state(inner_states, model_inner_states)
-                else:
-                    logits = model.shrinkage * model_logits
-                    # inner_states = model_inner_states
-
-        return logits  # , inner_states
-
-    def cat_boosted_logits(self, item_sources):
-        logits = []
-        item_sources = item_sources.to(self.device)
-        with torch.no_grad():
-            for model in WeakModels.weak_models.values():
-                model.eval()
-                model_logits = model(item_sources, encoder_out=None)
-                logits.append(model_logits)
-        return torch.stack(logits, dim=0)  # , inner_states
-
-    def merge_inner_state(self, inner_states, model_inner_states):
-        for inner_state, model_inner_state in zip(inner_states['inner_states'], model_inner_states['inner_states']):
-            inner_state = inner_state.to(model_inner_state.device)
-            model_inner_state.data += inner_state.data
-
-            del inner_state
-        return model_inner_states
+                model_logits, _ = model(item_sources, encoder_out=None)
+                # logits = self.boost(logits, model_logits, model.shrinkage)
+                logits += model.shrinkage * model_logits
+        return logits
 
     def boost(self, prev_logits, model_logits, shrinkage):
-        if prev_logits.device != model_logits.device:
-            if prev_logits.device.type == "cuda":
-                model_logits = model_logits.to(prev_logits.device)
-                shrinkage = shrinkage.to(prev_logits.device)
-            elif model_logits.device.type == "cuda":
-                prev_logits = prev_logits.to(model_logits.device)
+        prev_logits, model_logits = BoostedMonolingualDataset.sync_tensors_devices(prev_logits, model_logits)
 
-        # model_logits.data = shrinkage.data * model_logits.data + prev_logits.data
-        # return model_logits
-
-        model_logits = shrinkage * model_logits
-        # model_logits.data += prev_logits.data
-        model_logits = model_logits + prev_logits
+        model_logits *= shrinkage
+        
+        if self.logits_reduction == "mean":
+            model_logits.add_(prev_logits)
+            model_logits.data = torch.div(model_logits.data, len(WeakModels.weak_models) + 1)
+        elif self.logits_reduction == "mean_prevs_only":
+            prev_logits = torch.div(prev_logits, len(WeakModels.weak_models))
+            model_logits.add_(prev_logits)
+        model_logits.add_(prev_logits)
         return model_logits
 
-        # return shrinkage * model_logits + prev_logits
+    # # this can be used when the GPU memory is not a problem, takes more memory
+    # def cat_boosted_logits(self, item_sources):
+    #     logits = []
+    #     item_sources = item_sources.to(self.device)
+    #     with torch.inference_mode():
+    #         for model in WeakModels.weak_models.values():
+    #             model_logits, _ = model(item_sources, encoder_out=None)
+    #             logits.append(model.shrinkage * model_logits)
+    #     return torch.stack(logits, dim=0)  # , inner_states
+
+    # def boost(self, prev_logits, model_logits, shrinkage):
+    #     prev_logits, model_logits = BoostedMonolingualDataset.sync_tensors_devices(prev_logits, model_logits)
+
+    #     model_logits *= shrinkage
+    #     if self.logits_reduction == "mean":
+    #         return torch.mean(torch.cat((model_logits.unsqueeze(dim=0), prev_logits)), dim=0)
+    #     model_logits.data += prev_logits.data
+    #     return model_logits
 
     def collater(self, samples):
         return collate(
@@ -185,11 +172,30 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
 
     def get_weak_learners_shrinkages(self):
         shrinkages = {}
-        for model_name in WeakModels.weak_models:
-            logg_name = f"shrinkage_{model_name}"
-            if isinstance(WeakModels.weak_models[model_name].shrinkage, torch.nn.Parameter):
-                shrinkages[logg_name] = WeakModels.weak_models[model_name].shrinkage.item()
-            else:
-                shrinkages[logg_name] = WeakModels.weak_models[model_name].shrinkage
+        if WeakModels.weak_models:
+            for i, model in enumerate(WeakModels.weak_models.values()):
+                logg_name = f"shrinkage_{i}"
+                if isinstance(model.shrinkage, torch.nn.Parameter):
+                    shrinkages[logg_name] = model.shrinkage.item()
+                else:
+                    shrinkages[logg_name] = model.shrinkage
 
         return shrinkages
+
+    def merge_inner_state(self, inner_states, model_inner_states):
+        for inner_state, model_inner_state in zip(inner_states['inner_states'], model_inner_states['inner_states']):
+            inner_state = inner_state.to(model_inner_state.device)
+            model_inner_state.data += inner_state.data
+
+            del inner_state
+        return model_inner_states
+
+    @staticmethod
+    def sync_tensors_devices(tensor1, tensor2):
+        if tensor1.device != tensor2.device:
+            if tensor1.device.type == "cuda":
+                tensor2 = tensor2.to(tensor1.device)
+                # shrinkage = shrinkage.to(tensor1.device)
+            elif tensor2.device.type == "cuda":
+                tensor1 = tensor1.to(tensor2.device)
+        return tensor1, tensor2

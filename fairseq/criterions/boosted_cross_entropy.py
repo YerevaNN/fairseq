@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from fairseq import metrics, utils
 from fairseq.criterions import register_criterion
 from fairseq.criterions.cross_entropy import CrossEntropyCriterion, CrossEntropyCriterionConfig
-from fairseq.data.boosted_monolingual_dataset import BoostedMonolingualDataset
+from fairseq.data.boosted_monolingual_dataset import BoostedMonolingualDataset, WeakModels
 
 import torch
 from torch.nn.parameter import Parameter
@@ -56,21 +56,22 @@ class BoostedCrossEntropyCriterion(CrossEntropyCriterion):
         2) the sample size, which is used as the denominator for the gradient
         3) logging outputs to display while training
         """
-        train_dataset: BoostedMonolingualDataset = self.task.datasets['train']
-
         net_output, net_inner_states = model(**sample["net_input"])
+
+        train_dataset: BoostedMonolingualDataset = self.task.datasets['train']
         if not hasattr(model, "shrinkage"):
-            model.shrinkage = 1.0
-        # else:
-        #     model.shrinkage.to(net_output.device)
+            model.shrinkage = train_dataset.prev_lm_shrinkage
 
-        sample['boosted_logits'] = train_dataset.get_batch_boosted_logits(
-            sample['net_input']['src_tokens'])
+        if WeakModels.weak_models:
+            sample['boosted_logits'] = train_dataset.get_batch_boosted_logits(
+                sample['net_input']['src_tokens'])
 
-        boosted_output = train_dataset.boost(sample['boosted_logits'].detach(), net_output,
-                                             shrinkage=model.shrinkage)
+            boosted_output = train_dataset.boost(sample['boosted_logits'].detach(), net_output,
+                                                 shrinkage=model.shrinkage)
 
-        output = (boosted_output, net_inner_states)
+            output = (boosted_output, net_inner_states)
+        else:
+            output = (net_output, net_inner_states)
 
         loss, _ = self.compute_loss(model, output, sample, reduce=reduce)
         sample_size = (

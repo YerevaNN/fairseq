@@ -21,16 +21,19 @@ logger = logging.getLogger(__name__)
 class BoostedLanguageModelingConfig(LanguageModelingConfig):
     previous_lms: str = field(
         default="",
-        metadata={
-            "help": "comma-separated list of previous LM directories to boost on"},
-    )
-    model_better_init: bool = field(
-        default=False, metadata={"help": "initialize the model with the previous lms params"}
+        metadata={"help": "comma-separated list of previous LM directories to boost on"},
     )
     logits_cache_dir: str = field(
         default="",
-        metadata={
-            "help": "dir to cache the logits, if not specified will not be cached"},
+        metadata={"help": "dir to cache the logits, if not specified will not be cached"},
+    )
+    logits_reduction: str = field(
+        default="",
+        metadata={"help": "type of reduction of logits"}
+    )
+    prev_lm_shrinkage: float = field(
+        default=1.0,
+        metadata={"help": "default value for model shrinkage: tensor(1)"}
     )
 
 
@@ -67,17 +70,22 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
     def __init__(self, args, dictionary, output_dictionary=None, targets=None):
         super().__init__(args, dictionary, output_dictionary, targets)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model_better_init = args.model_better_init
         self.logits_cache_dir = args.logits_cache_dir
+        self.logits_reduction = args.logits_reduction
+        self.prev_lm_shrinkage = torch.tensor(args.prev_lm_shrinkage, requires_grad=False)
 
-        model_paths = args.previous_lms.split(",")
-
-        if WeakModels.weak_models is None:
+        if args.previous_lms and WeakModels.weak_models is None:
+            model_paths = args.previous_lms.split(",")
             WeakModels.weak_models = torch.nn.ModuleDict()
             for i, model_path in enumerate(model_paths):
-                WeakModels.weak_models.add_module(str(i), TransformerLanguageModel.from_pretrained(
-                    model_path, checkpoint_file='checkpoint_best.pt', data_name_or_path=args.data).models[0])
-            WeakModels.weak_models = WeakModels.weak_models.to(self.device)
+                model = TransformerLanguageModel.from_pretrained(
+                    model_path, checkpoint_file='checkpoint_best.pt', data_name_or_path=args.data).models[0]
+                if not hasattr(model, "shrinkage"):
+                    model.shrinkage = self.prev_lm_shrinkage
+
+                model = model.to(self.device)
+                model.shrinkage = model.shrinkage.to(self.device)
+                WeakModels.weak_models.add_module(str(i), model)
 
     def load_dataset(
         self, split: str, epoch=1, combine=False, **kwargs
@@ -89,8 +97,10 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
         """
         super().load_dataset(split, epoch, combine)
 
-        self.datasets[split] = BoostedMonolingualDataset(
-            self.datasets[split], self.device, model_better_init=self.model_better_init, logits_cache_dir=self.logits_cache_dir)
+        self.datasets[split] = BoostedMonolingualDataset(self.datasets[split], self.device,
+                                                         logits_cache_dir=self.logits_cache_dir,
+                                                         logits_reduction=self.logits_reduction,
+                                                         prev_lm_shrinkage=self.prev_lm_shrinkage)
 
     def build_model(self, args, from_checkpoint=False):
         model = super().build_model(args, from_checkpoint)
@@ -99,9 +109,5 @@ class BoostedLanguageModelingTask(LanguageModelingTask):
                 raise ValueError(
                     "Unsupported language modeling target: {}".format(target)
                 )
-
-        if self.model_better_init:
-            for model_param, weak_model_param in zip(model.parameters(), WeakModels.weak_models[-1].parameters()):
-                model_param.data = weak_model_param.data
 
         return model
