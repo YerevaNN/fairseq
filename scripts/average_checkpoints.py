@@ -77,9 +77,9 @@ def last_n_checkpoints(paths, n, update_based, upper_bound=None):
     assert len(paths) == 1
     path = paths[0]
     if update_based:
-        pt_regexp = re.compile(r"checkpoint_\d+_(\d+)\.pt")
-    else:
         pt_regexp = re.compile(r"checkpoint(\d+)\.pt")
+    else:
+        pt_regexp = re.compile(r"checkpoint_\d+_(\d+)\.pt")
     files = PathManager.ls(path)
 
     entries = []
