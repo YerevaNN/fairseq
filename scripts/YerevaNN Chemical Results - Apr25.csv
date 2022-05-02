@@ -1,0 +1,6 @@
+,Type,Experimental,Datasize,# of steps,# of subtasks,lr,Minutes to train 1 subtask,Hours to train all subtasks
+HIV,Classification,Yes,41127,20564,1,9e-6,367,6.1
+HIV,Classification,Yes,41127,41127,1,3e-5,489,8.1
+HIV,Classification,Yes,41127,30845,1,3e-5,367,6.1
+Tox21,Classification,Yes,7831,7831,12,3e-5,93,18.6
+
