@@ -63,7 +63,12 @@ os.system(f"mkdir -p {store_path}/{dataset}/processed/")
 os.system(f"mkdir -p {store_path}/{dataset}/processed/input0/")
 os.system(f"mkdir -p {store_path}/{dataset}/processed/label/")
 
-bart = BARTModel.from_pretrained(model,  checkpoint_file = f"/mnt/good/gayane/data/chkpt/{dataset}_bs_16_lr_{args.lr}_totalNum_{args.total_number_update}_warmup_{args.warmup_update}/checkpoint_best.pt", 
+warmup = args.warmup_update
+totNumUpdate = args.total_number_update
+lr = args.lr
+chkpt_path = f"/mnt/good/gayane/data/chkpt/{dataset}_bs_16_lr_{lr}_totalNum_{totNumUpdate}_warmup_{warmup}/checkpoint_last.pt"
+print(chkpt_path)
+bart = BARTModel.from_pretrained(model,  checkpoint_file = chkpt_path, 
                                  bpe="sentencepiece",
                                  sentencepiece_model="/home/gayane/BartLM/Bart/chemical/tokenizer/chem.model")
 bart.eval()
@@ -77,7 +82,7 @@ smiles = list(load_indexed_dataset(
 if len(dataset_js["class_index"])>1:
     test_label_path = list()
     for i in range(len(dataset_js["class_index"])):
-        test_label_path.append(f"{store_path}/{dataset}/processed/label{i}/valid")
+        test_label_path.append(f"{store_path}/{dataset}_{i}/processed/label/valid")
 
 else:
     test_label_path = f"{store_path}/{dataset}/processed/label/valid"
@@ -87,7 +92,7 @@ if task_type == 'classification':
         target_dict = list()
         targets_list = list()
         for i in range(len(dataset_js["class_index"])):
-            target_dict.append(Dictionary.load(f"{store_path}/{dataset}/processed/label{i}/dict.txt"))
+            target_dict.append(Dictionary.load(f"{store_path}/{dataset}_{i}/processed/label/dict.txt"))
             targets_list.append(list(load_indexed_dataset(test_label_path[i], target_dict[i])))
         
     else: 
