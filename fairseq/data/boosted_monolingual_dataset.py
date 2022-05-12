@@ -136,7 +136,7 @@ class BoostedMonolingualDataset(BaseWrapperDataset):
         if self.logits_reduction == "mean":
             model_logits.add_(prev_logits)
             model_logits.data = torch.div(model_logits.data, len(WeakModels.weak_models) + 1)
-        elif self.logits_reduction == "mean_prevs_only":
+        elif self.logits_reduction == "mean-wo-current":
             prev_logits = torch.div(prev_logits, len(WeakModels.weak_models))
             model_logits.add_(prev_logits)
         model_logits.add_(prev_logits)

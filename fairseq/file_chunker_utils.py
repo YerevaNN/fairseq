@@ -41,15 +41,34 @@ class ChunkLineIterator:
 
     def __init__(self, fd, start_offset: int, end_offset: int):
         self._fd = fd
+        print(f"start_offset - {start_offset}")
+        print(f"end_offset - {end_offset}")
         self._start_offset = start_offset
         self._end_offset = end_offset
 
+    def tell(self):
+        return self._fd.tell()
+
+    def readline(self):
+        return self._fd.readline()
+
     def __iter__(self) -> tp.Iterable[str]:
+        # return self._fd
+        # print('__iter__ from scratch')
+        from tqdm import tqdm
+
+        progress = tqdm(total=self._end_offset - self._start_offset)
         self._fd.seek(self._start_offset)
         # next(f) breaks f.tell(), hence readline() must be used
         line = _safe_readline(self._fd)
+
+        last_pos = self._start_offset
         while line:
-            pos = self._fd.tell()
+            pos = self.tell()
+            if pos - last_pos > 0 and pos - last_pos < 2**32:
+                progress.update(pos - last_pos)
+                last_pos = pos
+
             # f.tell() does not always give the byte position in the file
             # sometimes it skips to a very large number
             # it is unlikely that through a normal read we go from
@@ -61,9 +80,11 @@ class ChunkLineIterator:
                 and pos > self._end_offset
                 and pos < self._end_offset + 2**32
             ):
+                # print('PROBLEM')
                 break
             yield line
-            line = self._fd.readline()
+            line = self.readline()
+        progress.close()
 
 
 class Chunker:
