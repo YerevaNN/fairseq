@@ -6,6 +6,7 @@
 
 from pathlib import Path
 
+import os
 from tqdm import tqdm
 import argparse
 import json
@@ -16,8 +17,11 @@ import numpy as np
 
 
 def extract_json(in_path: str, out_path: str, num_shards: float, train_ratio: float):
-    shards = [open(f"{out_path}.train.{shard}.tokens", "w") for shard in range(num_shards+1)]
-    with open(in_path, "r") as in_file, open(f"{out_path}.val.tokens", "w") as out_val_file:
+    os.makedirs(out_path, exist_ok=True)
+    out_path = Path(out_path)
+
+    shards = [open(out_path.joinpath(f"train.{shard}.tokens"), "w") for shard in range(num_shards+1)]
+    with open(in_path, "r") as in_file, open(out_path.joinpath(f"val.tokens"), "w") as out_val_file:
         for line in tqdm(in_file):
             line_text = json.loads(line)['text']
             prob_train = random.uniform(0, 1)
