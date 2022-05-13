@@ -20,16 +20,16 @@ def extract_json(in_path: str, out_path: str, num_shards: float, train_ratio: fl
     os.makedirs(out_path, exist_ok=True)
     out_path = Path(out_path)
 
-    shards = [open(out_path.joinpath(f"train.{shard}.tokens"), "w") for shard in range(num_shards+1)]
-    with open(in_path, "r") as in_file, open(out_path.joinpath(f"val.tokens"), "w") as out_val_file:
+    shards = [open(out_path.joinpath(f"train.{shard}.tokens"), "w") for shard in range(num_shards)]
+    with open(in_path, "r") as in_file, open(out_path.joinpath(f"valid.tokens"), "w") as out_valid_file:
         for line in tqdm(in_file):
             line_text = json.loads(line)['text']
             prob_train = random.uniform(0, 1)
             if prob_train < train_ratio:
-                prob_shard = np.random.randint(0, num_shards+1)
+                prob_shard = np.random.randint(0, num_shards)
                 shards[prob_shard].write(line_text)
             else:
-                out_val_file.write(line_text)
+                out_valid_file.write(line_text)
 
     for shard_file in shards:
         shard_file.close()
