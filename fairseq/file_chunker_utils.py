@@ -53,8 +53,6 @@ class ChunkLineIterator:
         return self._fd.readline()
 
     def __iter__(self) -> tp.Iterable[str]:
-        # return self._fd
-        # print('__iter__ from scratch')
         from tqdm import tqdm
 
         progress = tqdm(total=self._end_offset - self._start_offset)
@@ -80,7 +78,6 @@ class ChunkLineIterator:
                 and pos > self._end_offset
                 and pos < self._end_offset + 2**32
             ):
-                # print('PROBLEM')
                 break
             yield line
             line = self.readline()
