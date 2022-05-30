@@ -1,0 +1,146 @@
+import logging
+from asyncio.log import logger
+import torch
+import os
+from pathlib import Path
+import hashlib
+from dataclasses import dataclass
+
+from . import BaseWrapperDataset, MonolingualDataset, data_utils
+
+logger = logging.getLogger(__name__)
+
+
+def collate(samples, pad_idx, eos_idx, fixed_pad_length=None, pad_to_bsz=None):
+    if len(samples) == 0:
+        return {}
+
+    def merge(key, is_list=False):
+        if is_list:
+            res = []
+            for i in range(len(samples[0][key])):
+                res.append(
+                    data_utils.collate_tokens(
+                        [s[key][i] for s in samples],
+                        pad_idx,
+                        eos_idx,
+                        left_pad=False,
+                        pad_to_length=fixed_pad_length,
+                        pad_to_bsz=pad_to_bsz,
+                    )
+                )
+            return res
+        else:
+            return data_utils.collate_tokens(
+                [s[key] for s in samples],
+                pad_idx,
+                eos_idx,
+                left_pad=False,
+                pad_to_length=fixed_pad_length,
+                pad_to_bsz=pad_to_bsz,
+            )
+
+    src_tokens = merge("source")
+    if samples[0]["target"] is not None:
+        is_target_list = isinstance(samples[0]["target"], list)
+        target = merge("target", is_target_list)
+    else:
+        target = src_tokens
+
+    return {
+        "id": torch.LongTensor([s["id"] for s in samples]),
+        "nsentences": len(samples),
+        "ntokens": sum(len(s["source"]) for s in samples),
+        "net_input": {
+            "src_tokens": src_tokens,
+            "src_lengths": torch.LongTensor([s["source"].numel() for s in samples]),
+        },
+        "target": target,
+        "diffusion_state": -1,
+    }
+
+
+class DiffusionMonolingualDataset(BaseWrapperDataset):
+    def __init__(self, dataset: MonolingualDataset, device=None, **kwargs):
+        super().__init__(dataset)
+        self.__dict__.update(kwargs)
+        self.device = device
+
+    def __getitem__(self, index):
+        return super().__getitem__(index)
+
+    def get_batch_boosted_logits(self, item_sources):
+        # logger.info(f"evaluating")
+        # start = time.time()
+        # boosted_logits, merged_inner_states = self.batch_boosted_logits(item_sources)
+        # end = time.time()
+        # logger.info(f"evaluated, took: {end-start}s")
+        # return boosted_logits, merged_inner_states
+        return self.batch_boosted_logits(item_sources)
+
+    # this can be used when the GPU memory is limited,
+    # though it might cause numerical overflow, because of accumulating logits in a single tensor
+    def batch_boosted_logits(self, item_sources):
+        item_sources = item_sources.to(self.device)
+        vocab_size = len(self.dataset.vocab.count)
+        logits = torch.zeros((item_sources.shape[0], item_sources.shape[1], vocab_size), device=self.device)
+
+        with torch.inference_mode():
+            for model in WeakModels.weak_models.values():
+                model_logits, _ = model(item_sources, encoder_out=None)
+                # logits = self.boost(logits, model_logits, model.shrinkage)
+                logits += model.shrinkage * model_logits
+        return logits
+
+    def boost(self, prev_logits, model_logits, shrinkage):
+        prev_logits, model_logits = DiffusionMonolingualDataset.sync_tensors_devices(prev_logits, model_logits)
+
+        model_logits *= shrinkage
+
+        if self.logits_reduction == "mean":
+            model_logits.add_(prev_logits)
+            model_logits.data = torch.div(model_logits.data, len(WeakModels.weak_models) + 1)
+        elif self.logits_reduction == "mean-wo-current":
+            prev_logits = torch.div(prev_logits, len(WeakModels.weak_models))
+            model_logits.add_(prev_logits)
+        model_logits.add_(prev_logits)
+        return model_logits
+
+    def collater(self, samples):
+        return collate(
+            samples,
+            self.dataset.vocab.pad(),
+            self.dataset.vocab.eos(),
+            self.dataset.fixed_pad_length,
+            self.dataset.pad_to_bsz,
+        )
+
+    def get_weak_learners_shrinkages(self):
+        shrinkages = {}
+        if WeakModels.weak_models:
+            for i, model in enumerate(WeakModels.weak_models.values()):
+                logg_name = f"shrinkage_{i}"
+                if isinstance(model.shrinkage, torch.nn.Parameter):
+                    shrinkages[logg_name] = model.shrinkage.item()
+                else:
+                    shrinkages[logg_name] = model.shrinkage
+
+        return shrinkages
+
+    def merge_inner_state(self, inner_states, model_inner_states):
+        for inner_state, model_inner_state in zip(inner_states['inner_states'], model_inner_states['inner_states']):
+            inner_state = inner_state.to(model_inner_state.device)
+            model_inner_state.data += inner_state.data
+
+            del inner_state
+        return model_inner_states
+
+    @staticmethod
+    def sync_tensors_devices(tensor1, tensor2):
+        if tensor1.device != tensor2.device:
+            if tensor1.device.type == "cuda":
+                tensor2 = tensor2.to(tensor1.device)
+                # shrinkage = shrinkage.to(tensor1.device)
+            elif tensor2.device.type == "cuda":
+                tensor1 = tensor1.to(tensor2.device)
+        return tensor1, tensor2
