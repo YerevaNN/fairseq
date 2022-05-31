@@ -29,6 +29,15 @@ from sklearn import metrics as metrics_skl
 from sklearn.metrics import roc_auc_score
 from pathlib import Path
 
+import numpy as np
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+import umap
+
 # We need to setup root logger before importing any fairseq libraries.
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -215,51 +224,6 @@ def main(cfg: FairseqConfig) -> None:
         logger.info("ioPath PathManager finished waiting.")
 
 
-def init_reg_cv(trX, trY, vaX, vaY, penalty='l1',
-                C=2**np.arange(-8, 1).astype(np.float), seed=42):
-    """
-    trX: [n_samples, n_units]
-    trY: [n_samples, 1]
-    """
-    # finding the best 'c'
-    # trX = trX.cpu().numpy()
-    # trY = trY.cpu().numpy().ravel()
-    # vaX = vaX.cpu().numpy()
-    # vaY = vaY.cpu().numpy().ravel()
-
-    # scores = []
-    # for i, c in enumerate(C):
-    #     model = LogisticRegression(solver="liblinear", C=c, penalty=penalty, random_state=seed+i)
-    #     model.fit(trX, trY)
-    #     score = model.score(vaX, vaY)
-    #     scores.append(score)
-    # c = C[np.argmax(scores)]
-
-    return [LogisticRegression(solver="liblinear", C=c, penalty=penalty, random_state=seed+len(C)) for c in C]
-
-
-def train_with_reg_cv(model, trX, trY, penalty='l1', seed=42):
-    """
-    trX: [n_samples, n_units]
-    trY: [n_samples, 1]
-    """
-    trX = trX.cpu().numpy()
-    trY = trY.cpu().numpy().ravel()
-
-    model.fit(trX, trY)
-    nnotzero = np.sum(model.coef_ != 0)
-    nonzero_positions = np.nonzero(np.squeeze(model.coef_, 0))[0]
-
-    return nnotzero, nonzero_positions
-
-
-def score(model, vaX, vaY):
-    vaX = vaX.cpu().numpy()
-    vaY = vaY.cpu().numpy().ravel()
-
-    return model.score(vaX, vaY)*100., roc_auc_score(vaY, model.predict_proba(vaX)[:, 1])*100
-
-
 def move_to(obj, device):
     if torch.is_tensor(obj):
         return obj.to(device)
@@ -304,50 +268,22 @@ def extract_features(itr, trainer, num_search_batches=-1):
     return subsetX, subsetY
 
 
-def plot_mlot(reg_model, nnotzero, nonzero_positions, acc, roc_auc, trX, trY, vaX, vaY, model_path, data_path):
-    print("****************************************")
-    print(f"   {reg_model.C} - C")
-    print(f"   {nnotzero} - features used")
-    print(f"   {list(nonzero_positions)} - features indices used")
-    print(f"   {acc} - val accuracy")
-    print(f"   {roc_auc} - val roc_auc")
-    print("****************************************")
-
+def plot_mlot(X, Y, i, subset, model_path, data_path):
     data_path = data_path.rstrip("/").lstrip("/").split("/")[-2]
     model_path = ".".join(model_path.rstrip("/").lstrip("/").split("/")[-2:])
 
-    log_save_dir = Path(f"./un-logs/{data_path}/{model_path}")
+    log_save_dir = Path(f"./umap-logs/{data_path}/{model_path}")
     log_save_dir.mkdir(parents=True, exist_ok=True)
 
-    dist_save_dir = Path(f"./un-logs/{data_path}/{model_path}/dist")
-    dist_save_dir.mkdir(parents=True, exist_ok=True)
+    print(f"working on: {subset}.{i}.png")
 
-    auc_roc_save_dir = Path(f"./un-logs/{data_path}/{model_path}/auc_roc")
-    auc_roc_save_dir.mkdir(parents=True, exist_ok=True)
+    reducer = umap.UMAP()
+    embedding = reducer.fit_transform(X)
 
-    logs = [f"{reg_model.C} - C", f"{nnotzero} - features used",
-            f"{list(nonzero_positions)} - features indices used",
-            f"{acc} - val accuracy", f"{roc_auc} - val roc_auc"]
-
-    with open(log_save_dir.joinpath(f"{reg_model.C}.log.txt"), "w") as f:
-        for log in logs:
-            f.write(log)
-            f.write("\n")
-
-    # visualize sentiment unit
-    trX_plot = trX.cpu().numpy()
-    trY_plot = trY.cpu().numpy().ravel()
-    sentiment_unit = trX_plot[:, 1000]
-    plt.hist(sentiment_unit[trY_plot == 0], bins=25, alpha=0.5, label='neg')
-    plt.hist(sentiment_unit[trY_plot == 1], bins=25, alpha=0.5, label='pos')
-    plt.legend()
-    plt.savefig(dist_save_dir.joinpath(f"{reg_model.C}.png"))
-    plt.clf()
-
-    vaX_plot = vaX.cpu().numpy()
-    vaY_plot = vaY.cpu().numpy().ravel()
-    metrics_skl.plot_roc_curve(reg_model, vaX_plot, vaY_plot)
-    plt.savefig(auc_roc_save_dir.joinpath(f"{reg_model.C}.png"))
+    plt.scatter(embedding[:, 0], embedding[:, 1], c=[sns.color_palette()[y] for y in Y])
+    plt.gca().set_aspect('equal', 'datalim')
+    plt.title(f"UMAP projection of {subset}", fontsize=24)
+    plt.savefig(log_save_dir.joinpath(f"{subset}.{i}.png"))
     plt.clf()
 
 
@@ -361,26 +297,21 @@ def train(
     # val
     itr_valid = trainer.get_valid_iterator("valid").next_epoch_itr(shuffle=False, set_dataset_epoch=False)
     vaX, vaY = extract_features(itr_valid, trainer)
-
-    # search
-    itr_train_search = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
-        epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
-    num_search_batches = 3
-    trX_search, trY_search = extract_features(itr_train_search, trainer, num_search_batches)
-
-    reg_models = init_reg_cv(trX_search, trY_search, vaX, vaY)
+    vaX = vaX.cpu()
+    vaY = vaY.cpu()
 
     # train
     itr_train = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
         epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
     trX, trY = extract_features(itr_train, trainer)
+    trX = trX.cpu()
+    trY = trY.cpu()
 
-    for reg_model in reg_models:
-        nnotzero, nonzero_positions = train_with_reg_cv(reg_model, trX, trY)
-        acc, roc_auc = score(reg_model, vaX, vaY)
+    sns.set(style='white', context='notebook', rc={'figure.figsize': (14, 10)})
 
-        plot_mlot(reg_model, nnotzero, nonzero_positions, acc, roc_auc, trX,
-                  trY, vaX, vaY, cfg.model.restore_file, cfg.model.data)
+    for i in range(10):
+        for subset, X, Y in [("valid", vaX, vaY), ("train", trX, trY)]:
+            plot_mlot(X, Y, i, subset, cfg.model.restore_file, cfg.model.data)
 
     return
 
