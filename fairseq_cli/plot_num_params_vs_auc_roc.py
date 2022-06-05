@@ -66,7 +66,7 @@ for pool in pools:
     plt.title(f"Pre-train: {pool}")
     plt.xlabel("Number of Features")
     plt.ylabel("AUC-ROC score")
-    plt.savefig(f"{pool}.pretrained.png")
+    plt.savefig(f"nf-vs-auc/{pool}.pretrained.png")
     plt.cla()
 
     for d_name, data in records_finetuned.items():
@@ -75,7 +75,7 @@ for pool in pools:
     plt.title(f"Fine-tune: {pool}")
     plt.xlabel("Number of Features")
     plt.ylabel("AUC-ROC score")
-    plt.savefig(f"{pool}.finetuned.png")
+    plt.savefig(f"nf-vs-auc/{pool}.finetuned.png")
 
 
 
