@@ -91,6 +91,7 @@ class DiffusionTransformerDecoder(TransformerDecoder):
         # embed tokens and positions
         if len(diffused_emb) > 0:
             embed_tokens = self.embed_tokens(prev_output_tokens)
+            # x -> x + N(...)
             embed_tokens.data += diffused_emb.data
             x = self.embed_scale * embed_tokens
         else:
