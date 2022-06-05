@@ -48,6 +48,7 @@ logging.basicConfig(
 logger = logging.getLogger("fairseq_cli.train")
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+PADD_IDX = 1
 
 
 def main(cfg: FairseqConfig) -> None:
@@ -246,7 +247,31 @@ def move_to(obj, device):
         return obj
 
 
-def extract_features(itr, trainer, num_search_batches=-1):
+# pooling: last
+# pooling: take the "important' features
+def pool(pooling: str, output_tok: torch.Tensor, **kwargs):
+    if pooling == "avg":
+        return torch.mean(output_tok, dim=1)
+    elif pooling == "last":
+        assert kwargs["input_tok"]
+        src_tokens = kwargs["input_tok"]['src_tokens'].cpu().detach().clone().numpy()
+        last_tokens = []
+        for i, sample in enumerate(src_tokens):
+            for j, token in enumerate(sample):
+                if token == PADD_IDX:
+                    last_tokens.append(j-1)
+                    break
+                elif j == src_tokens.shape[-1] - 1:
+                    last_tokens.append(j)
+        output_tokens = []
+        for i, sample in enumerate(output_tok):
+            output_tokens.append(sample[last_tokens[i]])
+        return torch.stack(output_tokens)
+    else:
+        raise NotImplemented(f"pooling method '{pooling}' is not implemented")
+
+
+def extract_features(itr, trainer, pooling, num_search_batches=-1):
     subsetX_list = []
     subsetY_list = []
     for i, sample in enumerate(itr):
@@ -258,7 +283,7 @@ def extract_features(itr, trainer, num_search_batches=-1):
 
         with torch.no_grad():
             output_tok, _ = trainer.model(**subsetX_sample)
-            output = torch.mean(output_tok, dim=1)
+            output = pool(pooling, output_tok, input_tok=subsetX_sample)
         subsetX_list.append(output)
         subsetY_list.append(subsetY_sample)
 
@@ -268,23 +293,31 @@ def extract_features(itr, trainer, num_search_batches=-1):
     return subsetX, subsetY
 
 
-def plot_mlot(X, Y, i, subset, model_path, data_path):
+def plot_mlot(X, Y, i, subset, model_path, data_path, pooling):
     data_path = data_path.rstrip("/").lstrip("/").split("/")[-2]
     model_path = ".".join(model_path.rstrip("/").lstrip("/").split("/")[-2:])
 
-    log_save_dir = Path(f"./umap-logs/{data_path}/{model_path}")
+    log_save_dir = Path(f"./umap-logs/{pooling}/{data_path}/{model_path}")
     log_save_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"working on: {subset}.{i}.png")
 
-    reducer = umap.UMAP()
-    embedding = reducer.fit_transform(X)
+    # https://umap-learn.readthedocs.io/en/latest/parameters.html
+    # n_neighbors
+    # min_dist
 
-    plt.scatter(embedding[:, 0], embedding[:, 1], c=[sns.color_palette()[y] for y in Y])
-    plt.gca().set_aspect('equal', 'datalim')
-    plt.title(f"UMAP projection of {subset}", fontsize=24)
-    plt.savefig(log_save_dir.joinpath(f"{subset}.{i}.png"))
-    plt.clf()
+    n_neighbors = [2, 10, 50, 100]
+    min_dists = [0.0, 0.25, 0.5, 0.99]
+    for n_neighbor in n_neighbors:
+        for min_dist in min_dists:
+            reducer = umap.UMAP(n_neighbors=n_neighbor, min_dist=min_dist)
+            embedding = reducer.fit_transform(X)
+
+            plt.scatter(embedding[:, 0], embedding[:, 1], c=[sns.color_palette()[y] for y in Y])
+            plt.gca().set_aspect('equal', 'datalim')
+            plt.title(f"UMAP projection of {subset}", fontsize=24)
+            plt.savefig(log_save_dir.joinpath(f"{subset}.{i}.{n_neighbor}.{min_dist}.png"))
+            plt.clf()
 
 
 @metrics.aggregate("train")
@@ -296,22 +329,22 @@ def train(
 
     # val
     itr_valid = trainer.get_valid_iterator("valid").next_epoch_itr(shuffle=False, set_dataset_epoch=False)
-    vaX, vaY = extract_features(itr_valid, trainer)
+    vaX, vaY = extract_features(itr_valid, trainer, cfg.model.pool)
     vaX = vaX.cpu()
     vaY = vaY.cpu()
 
     # train
     itr_train = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
         epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
-    trX, trY = extract_features(itr_train, trainer)
+    trX, trY = extract_features(itr_train, trainer, cfg.model.pool)
     trX = trX.cpu()
     trY = trY.cpu()
 
     sns.set(style='white', context='notebook', rc={'figure.figsize': (14, 10)})
 
-    for i in range(10):
-        for subset, X, Y in [("valid", vaX, vaY), ("train", trX, trY)]:
-            plot_mlot(X, Y, i, subset, cfg.model.restore_file, cfg.model.data)
+    # for i in range(10):
+    for subset, X, Y in [("valid", vaX, vaY), ("train", trX, trY)]:
+        plot_mlot(X, Y, 0, subset, cfg.model.restore_file, cfg.model.data, cfg.model.pool)
 
     return
 
@@ -320,6 +353,12 @@ def cli_main(
     modify_parser: Optional[Callable[[argparse.ArgumentParser], None]] = None
 ) -> None:
     parser = options.get_training_parser()
+    parser.add_argument(
+        "--pool",
+        type=str,
+        default="avg",
+        help="Method of representing a sentence via tokens",
+    )
     args = options.parse_args_and_arch(parser, modify_parser=modify_parser)
 
     cfg = convert_namespace_to_omegaconf(args)
