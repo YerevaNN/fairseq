@@ -93,6 +93,45 @@
         "split_type": "scaffold",
         "score": "roc-auc"
     },
+
+    "BBBP-balanced": {
+        "load_name": "bbbp",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+
+    "japan": {
+        "type": "classification",
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "filter": true,
+        "split_type": "random",
+        "score": "roc-auc",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES"
+    },
+
+    "snyder_negatives_451": {
+        "type": "classification",
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "filter": true,
+        "split_type": "random",
+        "score": "roc-auc",
+        "label_col_name": "label",
+        "smiles_col_name": "SMILES"
+    },
+
     "tox21": {
         "load_name": "tox21",
         "type": "classification",
@@ -390,7 +429,346 @@
         "split_type": "random",
         "score": "roc-auc"
     },
-    "sider": {
+    "SIDER-scaffold": {
+        "load_name": "sider",
+        "type": "classification",
+        "class_index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+
+
+    "SIDER-scaffold_0": {
+        "load_name": "sider_0",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_1": {
+        "load_name": "sider_1",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_2": {
+        "load_name": "sider_2",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_3": {
+        "load_name": "sider_3",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_4": {
+        "load_name": "sider_4",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_5": {
+        "load_name": "sider_5",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_6": {
+        "load_name": "sider_6",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_7": {
+        "load_name": "sider_7",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_8": {
+        "load_name": "sider_8",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_9": {
+        "load_name": "sider_9",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_10": {
+        "load_name": "sider_10",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_11": {
+        "load_name": "sider_11",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_12": {
+        "load_name": "sider_12",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_13": {
+        "load_name": "sider_13",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_14": {
+        "load_name": "sider_14",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_15": {
+        "load_name": "sider_15",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_16": {
+        "load_name": "sider_16",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_17": {
+        "load_name": "sider_17",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_18": {
+        "load_name": "sider_18",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_19": {
+        "load_name": "sider_19",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_20": {
+        "load_name": "sider_20",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_21": {
+        "load_name": "sider_21",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_22": {
+        "load_name": "sider_22",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_23": {
+        "load_name": "sider_23",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_24": {
+        "load_name": "sider_24",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_25": {
+        "load_name": "sider_25",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "SIDER-scaffold_26": {
+        "load_name": "sider_26",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    
+
+
+    "SIDER": {
         "load_name": "sider",
         "type": "classification",
         "class_index": [
@@ -427,6 +805,7 @@
         "split_type": "random",
         "score": "roc-auc"
     },
+
     "sider8": {
         "load_name": "sider8",
         "type": "classification",
@@ -782,8 +1161,81 @@
         "split_type": "random",
         "score": "rmse",
         "label_col_name": "Classification",
-        "smiles_col_name": "SMILES"
+        "smiles_col_name": "SMILES",
+        "k_fold": 5
     },
+
+    "Genotoxicity_0-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
+        "k_fold": 5
+    },
+
+    "Genotoxicity_1-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
+        "k_fold": 5
+    },
+
+    "Genotoxicity_2-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
+        "k_fold": 5
+    },
+
+    "Genotoxicity_3-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
+        "k_fold": 5
+    },
+
+    "Genotoxicity_4-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
+        "k_fold": 5
+    },
+
+
     "Ames": {
         "type": "classification",
         "filter": false,
@@ -794,9 +1246,88 @@
         "split_type": "random",
         "score": "rmse",
         "label_col_name": "Activity",
-        "smiles_col_name": "Canonical_Smiles"
+        "smiles_col_name": "Canonical_Smiles",
+        "k_fold": 10
     },
+
+    "Ames_0-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Activity",
+        "smiles_col_name": "Canonical_Smiles",
+        "k_fold": 10
+    },
+    "Ames_1-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Activity",
+        "smiles_col_name": "Canonical_Smiles",
+        "k_fold": 10
+    },
+    "Ames_2-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Activity",
+        "smiles_col_name": "Canonical_Smiles",
+        "k_fold": 10
+    },
+    "Ames_3-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Activity",
+        "smiles_col_name": "Canonical_Smiles",
+        "k_fold": 10
+    },
+    "Ames_4-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "split_type": "random",
+        "score": "rmse",
+        "label_col_name": "Activity",
+        "smiles_col_name": "Canonical_Smiles",
+        "k_fold": 10
+    },
+    
     "clintox_0": {
+        "load_name": "clintox",
+        "type": "classification",
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "filter": false,
+        "split_type": "random",
+        "score": "roc-auc"
+    },
+    "clintox_1": {
         "load_name": "clintox",
         "type": "classification",
         "class_index": [
