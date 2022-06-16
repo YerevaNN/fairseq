@@ -525,7 +525,7 @@ def cli_main(
         "--umap-datasets",
         type=str,
         default="",
-        help="list of datasets to plot on, comma seperate",
+        help="list of datasets to plot on, comma seperate. NOTE: paths need to end with a /",
     )
 
     parser.add_argument(
