@@ -1,6 +1,6 @@
 from sklearn.metrics import auc, roc_auc_score, precision_recall_curve, classification_report, mean_squared_error, confusion_matrix
 from fairseq.data.data_utils import load_indexed_dataset
-from sklearn.linear_model import ridge_regression
+# from sklearn.linear_model import ridge_regression
 from fairseq.models.bart import BARTModel
 from fairseq.data import Dictionary
 import torch.nn.functional as F 
@@ -11,6 +11,7 @@ import argparse
 import torch
 import json
 import os
+os.environ['MKL_THREADING_LAYER'] = 'GNU'
 
 
 def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits: bool = False):
@@ -34,17 +35,24 @@ def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits:
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset-name', required=True,
                         help='dataset name.')
-parser.add_argument('--subtask', required=True,
+parser.add_argument('--subtask',
                         help='subtask')
 parser.add_argument('--warmup-update', required=True,
                         help='warmup update')
 parser.add_argument('--total-number-update', required=True,
                         help='total number update')
-parser.add_argument('--lr', default=3e-5,
+parser.add_argument('--lr', default="1e-5",
                         help='learning rate')
+parser.add_argument('--dropout', default="0.1",
+                        help='learning rate')
+parser.add_argument('--r3f',
+                        help='learning rate')
+parser.add_argument('--noise_type',
+                        help='learning rate')
+parser.add_argument('--checkpoint_name', default="checkpoint_best.pt")
 args = parser.parse_args()
 
-dataset = args.dataset_name if args.dataset_name in set(["BBBP", "BACE", "HIV"]) else f"{args.dataset_name}_{args.subtask}"
+dataset = args.dataset_name #if args.dataset_name in set(["esol", "freesolv", "lipo", "Ames", "BBBP", "BACE", "HIV"]) else f"{args.dataset_name}_{args.subtask}"
 
 store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
 model = f"{store_path}/{dataset}/processed"
@@ -66,8 +74,15 @@ os.system(f"mkdir -p {store_path}/{dataset}/processed/label/")
 warmup = args.warmup_update
 totNumUpdate = args.total_number_update
 lr = args.lr
-chkpt_path = f"/mnt/good/gayane/data/chkpt/{dataset}_bs_16_lr_{lr}_totalNum_{totNumUpdate}_warmup_{warmup}/checkpoint_last.pt"
-print(chkpt_path)
+noise_type = args.noise_type
+r3f_lambda = args.r3f
+drout = args.dropout
+# _noise_type_uniform_r3f_lambda_0.7
+noise_params = f"_noise_type_{noise_type}_r3f_lambda_{r3f_lambda}" if noise_type in ["uniform", "normal"] else ""
+
+chkpt_path = f"/mnt/good/gayane/data/chkpt/{dataset}_bs_16_dropout_{drout}_lr_{lr}_totalNum_{totNumUpdate}_warmup_{warmup}{noise_params}/{args.checkpoint_name}"
+# chkpt_path = "/mnt/good/gayane/data/chkpt/Ames_bs_16_dropout_0.2_lr_3e-5_totalNum_3256_warmup_520/chkpt_upper_bound_best_val_loss_6_count_4.pt"
+print(chkpt_path)  # BACE_bs_16_lr_3e-5_totalNum_1135_warmup_181/ in test 
 bart = BARTModel.from_pretrained(model,  checkpoint_file = chkpt_path, 
                                  bpe="sentencepiece",
                                  sentencepiece_model="/home/gayane/BartLM/Bart/chemical/tokenizer/chem.model")
@@ -105,6 +120,7 @@ elif task_type == 'regression':
 
 y_pred = []
 y = []
+sm = []
 if len(dataset_js["class_index"])>1:
     y_pred_list = list()
     y_list = list()
@@ -127,11 +143,16 @@ else:
             target = target[0].item()
             y_pred.append(output[0][1].exp().item())
             y.append(target - 4)
+            sm.append(bart.decode(smile))
             
         elif task_type == "regression":
             output = bart.predict('sentence_classification_head', smile, return_logits=True)
             y_pred.append(output[0][0].item())
             y.append(target)
+    d = {"SMILES": sm, "prediction": y_pred , "y_true": y }
+    df = pd.DataFrame(d) 
+    df = df.dropna()
+    df.to_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{args.dataset_name}/{args.dataset_name}_valid.csv")     
 
 if task_type == 'classification':
     if len(dataset_js["class_index"]) >1:
@@ -159,6 +180,7 @@ if task_type == 'classification':
         
 
     else: 
+
         print("ROC_AUC_SCORE: ", roc_auc_score(y, y_pred))
         y_pred_binary = np.array(y_pred) > 0.5
         print(classification_report(y, y_pred_binary))
