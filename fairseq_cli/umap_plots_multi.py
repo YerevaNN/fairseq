@@ -295,34 +295,38 @@ def extract_features(itr, model, pooling, num_search_batches=-1):
     return subsetX, subsetY
 
 
-def plot_mlot(X, Y, dataset, subset, pooling, umap_fit_policy):
-    log_save_dir = Path(f"./umap-multi-logs/{pooling}/{umap_fit_policy}")
+def plot(embedding, Y, dataset, log_save_dir, subset, n_neighbor, min_dist):
+    data = {
+        "x": embedding[:, 0].tolist(),
+        "y": embedding[:, 1].tolist(),
+        "label": Y.squeeze().tolist(),
+        "dataset": dataset
+    }
+    df = pd.DataFrame(data=data)
+
+    sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="label", alpha=0.85)
+    plt.savefig(log_save_dir.joinpath(f"{subset}-{n_neighbor}-{min_dist}.png"))
+    plt.clf()
+
+
+def plot_mlot(X, Y, dataset, dir_name, subset, pooling, umap_fit_policy):
+    log_save_dir = Path(f"./umap-logs-{dir_name}/{pooling}/{umap_fit_policy}")
     log_save_dir.mkdir(parents=True, exist_ok=True)
 
     plt.gca().set_aspect('equal', 'datalim')
-    plt.title(f"UMAP projection of {subset}", fontsize=24)
     plt.legend(fontsize=14, markerscale=2, facecolor='w')
 
-    n_neighbors = [2, 10, 50, 100]
+    n_neighbors = [10, 50, 100]
     min_dists = [0.0, 0.25, 0.5, 0.99]
     for n_neighbor in n_neighbors:
         for min_dist in min_dists:
-            logging.info(f"--------------------- {subset}.{n_neighbor}.{min_dist} ---------------------")
+            logging.info(f"--------------------- {subset}-{n_neighbor}-{min_dist} ---------------------")
+            plt.title(f"UMAP projection of {subset} - number of neighbours:{n_neighbor}, min distance:{min_dist}", fontsize=19)
             reducer = umap.UMAP(n_neighbors=n_neighbor, min_dist=min_dist)
 
             if umap_fit_policy == "grouped":
                 embedding = reducer.fit_transform(X)
-                data = {
-                    "x": embedding[:, 0].tolist(),
-                    "y": embedding[:, 1].tolist(),
-                    "label": Y.squeeze().tolist(),
-                    "dataset": dataset
-                }
-                df = pd.DataFrame(data=data)
-
-                sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="label")
-                plt.savefig(log_save_dir.joinpath(f"{subset}.{n_neighbor}.{min_dist}.png"))
-                plt.clf()
+                plot(embedding, Y, dataset, log_save_dir, subset, n_neighbor, min_dist)
             elif umap_fit_policy == "seperate":
                 embeddings = []
                 curr_da = dataset[0]
@@ -339,17 +343,7 @@ def plot_mlot(X, Y, dataset, subset, pooling, umap_fit_policy):
                         embedding = reducer.fit_transform(sub_X)
                         embeddings.append(embedding)
                 embedding = np.concatenate(embeddings)
-                data = {
-                    "x": embedding[:, 0].tolist(),
-                    "y": embedding[:, 1].tolist(),
-                    "label": Y.squeeze().tolist(),
-                    "dataset": dataset
-                }
-                df = pd.DataFrame(data=data)
-
-                sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="label")
-                plt.savefig(log_save_dir.joinpath(f"{subset}.{n_neighbor}.{min_dist}.png"))
-                plt.clf()
+                plot(embedding, Y, dataset, log_save_dir, subset, n_neighbor, min_dist)
             else:
                 raise NotImplementedError(f"umap_fit_policy method {umap_fit_policy}")
 
@@ -412,22 +406,17 @@ def train(
     trainer.model.eval()
 
     # trivial caching
-    cache_dir = Path("cache")
+    dir_name = "-".join([dataset.rstrip("/").split("/")[-2].lower() for dataset in datasets])
+    cache_dir = Path("cache").joinpath(dir_name)
 
-    if cache_dir.joinpath("trXs_stack.pt").exists():
+    if cache_dir.exists():
         trXs_stack = torch.load(cache_dir.joinpath("trXs_stack.pt"))
-    if cache_dir.joinpath("trYs_stack.pt").exists():
         trYs_stack = torch.load(cache_dir.joinpath("trYs_stack.pt"))
-    if cache_dir.joinpath("vaXs_stack.pt").exists():
         vaXs_stack = torch.load(cache_dir.joinpath("vaXs_stack.pt"))
-    if cache_dir.joinpath("vaYs_stack.pt").exists():
         vaYs_stack = torch.load(cache_dir.joinpath("vaYs_stack.pt"))
-    if cache_dir.joinpath("valDatasets.pt").exists():
         valDatasets = torch.load(cache_dir.joinpath("valDatasets.pt"))
-    if cache_dir.joinpath("trainDatasets.pt").exists():
         trainDatasets = torch.load(cache_dir.joinpath("trainDatasets.pt"))
-
-    if "trXs_stack" not in locals() and "trYs_stack" not in locals() and "vaXs_stack" not in locals() and "vaYs_stack" not in locals():
+    else:
         valDatasets = []
         vaXs = []
         vaYs = []
@@ -435,7 +424,7 @@ def train(
         trXs = []
         trYs = []
         for dataset, checkpoint in zip(datasets, checkpoints):
-            dataset_name = dataset.split("/")[-3]
+            dataset_name = dataset.rstrip("/").split("/")[-2]
             print(f"dataset {dataset_name}")
             cfg.model.data = dataset
             cfg.task.data = dataset
@@ -485,6 +474,7 @@ def train(
         vaXs_stack = torch.concat(vaXs, dim=0)
         vaYs_stack = torch.concat(vaYs, dim=0)
 
+        cache_dir.mkdir(parents=True, exist_ok=True)
         torch.save(trXs_stack, cache_dir.joinpath("trXs_stack.pt"))
         torch.save(trYs_stack, cache_dir.joinpath("trYs_stack.pt"))
         torch.save(vaXs_stack, cache_dir.joinpath("vaXs_stack.pt"))
@@ -495,7 +485,7 @@ def train(
     sns.set(style='white', context='notebook', rc={'figure.figsize': (14, 10)})
 
     for subset, X, Y, dataset in [("valid", vaXs_stack, vaYs_stack, valDatasets), ("train", trXs_stack, trYs_stack, trainDatasets)]:
-        plot_mlot(X, Y, dataset, subset, cfg.model.pool, cfg.model.umap_fit_policy)
+        plot_mlot(X, Y, dataset, dir_name, subset, cfg.model.pool, cfg.model.umap_fit_policy)
 
     sys.exit()
 
@@ -525,7 +515,7 @@ def cli_main(
         "--umap-datasets",
         type=str,
         default="",
-        help="list of datasets to plot on, comma seperate. NOTE: paths need to end with a /",
+        help="list of datasets to plot on, comma seperate",
     )
 
     parser.add_argument(
