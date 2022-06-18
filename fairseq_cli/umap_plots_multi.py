@@ -295,7 +295,7 @@ def extract_features(itr, model, pooling, num_search_batches=-1):
     return subsetX, subsetY
 
 
-def plot(embedding, Y, dataset, log_save_dir, subset, n_neighbor, min_dist):
+def plot(embedding, Y, ground_embedding, ground_Y, dataset, ground_dataset, log_save_dir, subset, n_neighbor, min_dist):
     data = {
         "x": embedding[:, 0].tolist(),
         "y": embedding[:, 1].tolist(),
@@ -304,12 +304,21 @@ def plot(embedding, Y, dataset, log_save_dir, subset, n_neighbor, min_dist):
     }
     df = pd.DataFrame(data=data)
 
+    ground_data = {
+        "x": ground_embedding[:, 0].tolist(),
+        "y": ground_embedding[:, 1].tolist(),
+        "label": ground_Y.squeeze().tolist(),
+        "dataset": ground_dataset
+    }
+    ground_df = pd.DataFrame(data=ground_data)
+    sns.kdeplot(x=ground_df.x, y=ground_df.y, cmap="light:b", shade=True, bw_adjust=.5)
+
     sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="label", alpha=0.85)
     plt.savefig(log_save_dir.joinpath(f"{subset}-{n_neighbor}-{min_dist}.png"))
     plt.clf()
 
 
-def plot_mlot(X, Y, dataset, dir_name, subset, pooling, umap_fit_policy):
+def fit_and_plot(X, Y, groundX, groundY, dataset, ground_dataset, dir_name, subset, pooling, umap_fit_policy):
     log_save_dir = Path(f"./umap-logs-{dir_name}/{pooling}/{umap_fit_policy}")
     log_save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -321,13 +330,14 @@ def plot_mlot(X, Y, dataset, dir_name, subset, pooling, umap_fit_policy):
     for n_neighbor in n_neighbors:
         for min_dist in min_dists:
             logging.info(f"--------------------- {subset}-{n_neighbor}-{min_dist} ---------------------")
-            plt.title(f"UMAP projection of {subset} - number of neighbours:{n_neighbor}, min distance:{min_dist}", fontsize=19)
+            plt.title(f"UMAP projection of {subset}, using the '{ground_dataset}' as the ground dataset - number of neighbours:{n_neighbor}, min distance:{min_dist}", fontsize=15)
             reducer = umap.UMAP(n_neighbors=n_neighbor, min_dist=min_dist)
 
             if umap_fit_policy == "grouped":
+                ground_embedding = reducer.fit_transform(groundX)
                 embedding = reducer.fit_transform(X)
-                plot(embedding, Y, dataset, log_save_dir, subset, n_neighbor, min_dist)
             elif umap_fit_policy == "seperate":
+                ground_embedding = reducer.fit_transform(groundX)
                 embeddings = []
                 curr_da = dataset[0]
                 pivot = 0
@@ -343,9 +353,10 @@ def plot_mlot(X, Y, dataset, dir_name, subset, pooling, umap_fit_policy):
                         embedding = reducer.fit_transform(sub_X)
                         embeddings.append(embedding)
                 embedding = np.concatenate(embeddings)
-                plot(embedding, Y, dataset, log_save_dir, subset, n_neighbor, min_dist)
             else:
                 raise NotImplementedError(f"umap_fit_policy method {umap_fit_policy}")
+
+            plot(embedding, Y, ground_embedding, groundY, dataset, ground_dataset, log_save_dir, subset, n_neighbor, min_dist)
 
 
 @metrics.aggregate("train")
@@ -405,6 +416,7 @@ def train(
     """Train the model for one epoch and return validation losses."""
     trainer.model.eval()
 
+    ground_dataset = cfg.model.ground_dataset
     # trivial caching
     dir_name = "-".join([dataset.rstrip("/").split("/")[-2].lower() for dataset in datasets])
     cache_dir = Path("cache").joinpath(dir_name)
@@ -416,6 +428,11 @@ def train(
         vaYs_stack = torch.load(cache_dir.joinpath("vaYs_stack.pt"))
         valDatasets = torch.load(cache_dir.joinpath("valDatasets.pt"))
         trainDatasets = torch.load(cache_dir.joinpath("trainDatasets.pt"))
+
+        trainGroundX = torch.load(cache_dir.joinpath("trainGroundX.pt"))
+        trainGroundY = torch.load(cache_dir.joinpath("trainGroundY.pt"))
+        valGroundX = torch.load(cache_dir.joinpath("valGroundX.pt"))
+        valGroundY = torch.load(cache_dir.joinpath("valGroundY.pt"))
     else:
         valDatasets = []
         vaXs = []
@@ -424,7 +441,7 @@ def train(
         trXs = []
         trYs = []
         for dataset, checkpoint in zip(datasets, checkpoints):
-            dataset_name = dataset.rstrip("/").split("/")[-2]
+            dataset_name = dataset.rstrip("/").split("/")[-2].lower()
             print(f"dataset {dataset_name}")
             cfg.model.data = dataset
             cfg.task.data = dataset
@@ -444,9 +461,16 @@ def train(
             vaX, vaY = extract_features(itr_valid, trainer.model, cfg.model.pool)
             vaX = vaX.cpu()
             vaY = vaY.cpu()
-            vaXs.append(vaX)
-            vaYs.append(vaY)
-            valDatasets += [dataset_name]*vaX.shape[0]
+
+            if dataset_name == ground_dataset:
+                assert valGroundX not in locals()
+                assert valGroundY not in locals()
+                valGroundX = vaX
+                valGroundY = vaY
+            else:
+                vaXs.append(vaX)
+                vaYs.append(vaY)
+                valDatasets += [dataset_name]*vaX.shape[0]
 
             # train
             epoch_itr = sub_trainer.get_train_iterator(
@@ -460,9 +484,16 @@ def train(
             print("\n")
             trX = trX.cpu()
             trY = trY.cpu()
-            trXs.append(trX)
-            trYs.append(trY)
-            trainDatasets += [dataset_name]*trX.shape[0]
+
+            if dataset_name == ground_dataset:
+                assert trainGroundX not in locals()
+                assert trainGroundY not in locals()
+                trainGroundX = trX
+                trainGroundY = trY
+            else:
+                trXs.append(trX)
+                trYs.append(trY)
+                trainDatasets += [dataset_name]*trX.shape[0]
 
             del sub_trainer
             del sub_task
@@ -482,10 +513,15 @@ def train(
         torch.save(valDatasets, cache_dir.joinpath("valDatasets.pt"))
         torch.save(trainDatasets, cache_dir.joinpath("trainDatasets.pt"))
 
+        torch.save(trainGroundX, cache_dir.joinpath("trainGroundX.pt"))
+        torch.save(trainGroundY, cache_dir.joinpath("trainGroundY.pt"))
+        torch.save(valGroundX, cache_dir.joinpath("valGroundX.pt"))
+        torch.save(valGroundY, cache_dir.joinpath("valGroundY.pt"))
+
     sns.set(style='white', context='notebook', rc={'figure.figsize': (14, 10)})
 
-    for subset, X, Y, dataset in [("valid", vaXs_stack, vaYs_stack, valDatasets), ("train", trXs_stack, trYs_stack, trainDatasets)]:
-        plot_mlot(X, Y, dataset, dir_name, subset, cfg.model.pool, cfg.model.umap_fit_policy)
+    for subset, X, Y, groundX, groundY, dataset in [("valid", vaXs_stack, vaYs_stack, valGroundX, valGroundY, valDatasets), ("train", trXs_stack, trYs_stack, trainGroundX, trainGroundY, trainDatasets)]:
+        fit_and_plot(X, Y, groundX, groundY, dataset, ground_dataset, dir_name, subset, cfg.model.pool, cfg.model.umap_fit_policy)
 
     sys.exit()
 
@@ -523,6 +559,13 @@ def cli_main(
         type=str,
         default="",
         help="list of checkpoints of each dataset, comma seperate",
+    )
+
+    parser.add_argument(
+        "--ground-dataset",
+        type=str,
+        default="",
+        help="the name of the dataset for which to plot the contoures (pre-training dataset)",
     )
 
     args = options.parse_args_and_arch(parser, modify_parser=modify_parser)
