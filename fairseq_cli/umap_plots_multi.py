@@ -312,8 +312,10 @@ def plot(embedding, Y, ground_embedding, ground_Y, dataset, ground_dataset, log_
     }
     ground_df = pd.DataFrame(data=ground_data)
     sns.kdeplot(x=ground_df.x, y=ground_df.y, cmap="light:b", shade=True, bw_adjust=.5)
+    # sns.kdeplot(x=ground_df.x, y=ground_df.y)
 
     sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="label", alpha=0.85)
+    # sns.kdeplot(data=df, x="x", y="y", shade=True, hue="dataset", alpha=0.85)
     plt.savefig(log_save_dir.joinpath(f"{subset}-{n_neighbor}-{min_dist}.png"))
     plt.clf()
 
@@ -330,7 +332,8 @@ def fit_and_plot(X, Y, groundX, groundY, dataset, ground_dataset, dir_name, subs
     for n_neighbor in n_neighbors:
         for min_dist in min_dists:
             logging.info(f"--------------------- {subset}-{n_neighbor}-{min_dist} ---------------------")
-            plt.title(f"UMAP projection of {subset}, using the '{ground_dataset}' as the ground dataset - number of neighbours:{n_neighbor}, min distance:{min_dist}", fontsize=15)
+            plt.title(
+                f"UMAP projection of {subset}, using the '{ground_dataset}' as the ground dataset - number of neighbours:{n_neighbor}, min distance:{min_dist}", fontsize=15)
             reducer = umap.UMAP(n_neighbors=n_neighbor, min_dist=min_dist)
 
             if umap_fit_policy == "grouped":
@@ -521,7 +524,8 @@ def train(
     sns.set(style='white', context='notebook', rc={'figure.figsize': (14, 10)})
 
     for subset, X, Y, groundX, groundY, dataset in [("valid", vaXs_stack, vaYs_stack, valGroundX, valGroundY, valDatasets), ("train", trXs_stack, trYs_stack, trainGroundX, trainGroundY, trainDatasets)]:
-        fit_and_plot(X, Y, groundX, groundY, dataset, ground_dataset, dir_name, subset, cfg.model.pool, cfg.model.umap_fit_policy)
+        fit_and_plot(X, Y, groundX, groundY, dataset, ground_dataset, dir_name,
+                     subset, cfg.model.pool, cfg.model.umap_fit_policy)
 
     sys.exit()
 
