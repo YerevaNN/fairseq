@@ -37,7 +37,7 @@ for i, task in zip(range(len(lines)),tqdm(lines)):
     if 'noise_type' not in params['args']['value'].keys():
          noise_type, r3f = "", 0
     else:
-        params['args']['value']['noise_type'], params['args']['value']['r3f_lambda']
+        noise_type, r3f = params['args']['value']['noise_type'], params['args']['value']['r3f_lambda']
     name = run.name
     is_regress = params['args']['value']['regression_target']
     # codename = f"{name}_bs_{bs}_dropout_{drout}_lr_{lr}_totalNum_{TOTAL_NUM_UPDATES}_warmup_{WARMUP_UPDATES}"
@@ -130,10 +130,10 @@ for i in range(len(names)):
     chkpt_name_last = f"chkpt_upper_bound_last_{upper_bound_last}_count_{chkpt_count}"
     
     directory = f"{savePath}{n}"
-    task_name = n.split("_")[0] + '_' + n.split("_")[1] if n.split("_")[1].split('-')[0].isdigit() else n.split("_")[0]
+    task_name = n.split("_")[0] + '_' + n.split("_")[1] if n.split("_")[1].split('-')[0].isdigit() or n.split("_")[1].isdigit() else n.split("_")[0]
     is_regress = row['is_regression']
     noise_params = f" --noise_type {noise_type} --r3f {r3f_lambda}" if noise_type in ["uniform", "normal"] else ""
-    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout}{noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name checkpoint_best.pt""" 
+    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout}{noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name checkpoint_best.pt >> /home/gayane/BartLM/Bart/chemical/log/R3F_{task_name}.log""" 
     print("---------------------> chkpt_name_best_val_loss: ", cmd)
     os.system(cmd)
     cmd = f"""python /home/gayane/BartLM/fairseq/scripts/average_checkpoints.py --inputs {directory}/ --output {directory}/{chkpt_name_best_val_loss}.pt --checkpoint-upper-bound {upper_bound_best_val_loss} --num-epoch-checkpoints {chkpt_count}""" 
@@ -142,7 +142,7 @@ for i in range(len(names)):
     os.system(cmd)
 
     
-    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout} {noise_params}--dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_best_val_loss}.pt""" 
+    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout} {noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_best_val_loss}.pt >> /home/gayane/BartLM/Bart/chemical/log/R3F_{task_name}.log""" 
     print("---------------------> chkpt_name_best_val_loss SWA score: ", cmd)
     os.system(cmd)
 
@@ -155,12 +155,12 @@ for i in range(len(names)):
     os.system(cmd)
 
 
-    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout} {noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_best_val_acc}.pt""" 
+    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout} {noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_best_val_acc}.pt >> /home/gayane/BartLM/Bart/chemical/log/R3F_{task_name}.log""" 
     print("---------------------> chkpt_name_best_val_acc SWA score: ", cmd)
     os.system(cmd)
 
 
-    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout} --dataset-name {task_name} {noise_params} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name checkpoint{best_val_accuracy[i]}.pt""" 
+    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout} --dataset-name {task_name} {noise_params} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name checkpoint{best_val_accuracy[i]}.pt >> /home/gayane/BartLM/Bart/chemical/log/R3F_{task_name}.log""" 
     print("--------------------->  chkpt_name_best_val_acc score: ")
     print(cmd)
     os.system(cmd)
@@ -173,7 +173,7 @@ for i in range(len(names)):
     os.system(cmd)
 
 
-    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout} --dataset-name {task_name} {noise_params} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_last}.pt""" 
+    cmd = f"""python /home/gayane/BartLM/fairseq/scripts/compute_auc.py --lr {lr} --dropout {drout} --dataset-name {task_name} {noise_params} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_last}.pt >> /home/gayane/BartLM/Bart/chemical/log/R3F_{task_name}.log""" 
     print(" --------------------> last checkpoints SWA score: ")
     print(cmd)
     os.system(cmd)

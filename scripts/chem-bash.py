@@ -24,7 +24,6 @@ savePath = "/mnt/good/gayane/data/chkpt/"
 
 
 
-
 for task in tqdm(lines):
     task_name = task['']
     print(f"\nStarting {task_name}")
@@ -83,4 +82,3 @@ for task in tqdm(lines):
         os.system(cmd)
     
     print("\n\n")
-    

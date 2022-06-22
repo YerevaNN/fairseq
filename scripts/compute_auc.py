@@ -81,7 +81,7 @@ drout = args.dropout
 noise_params = f"_noise_type_{noise_type}_r3f_lambda_{r3f_lambda}" if noise_type in ["uniform", "normal"] else ""
 
 chkpt_path = f"/mnt/good/gayane/data/chkpt/{dataset}_bs_16_dropout_{drout}_lr_{lr}_totalNum_{totNumUpdate}_warmup_{warmup}{noise_params}/{args.checkpoint_name}"
-# chkpt_path = "/mnt/good/gayane/data/chkpt/Ames_bs_16_dropout_0.2_lr_3e-5_totalNum_3256_warmup_520/chkpt_upper_bound_best_val_loss_6_count_4.pt"
+# chkpt_path = "/mnt/good/gayane/data/chkpt/BACE_bs_16_dropout_0.3_lr_1e-5_totalNum_757_warmup_121_noise_type_normal_r3f_lambda_0.5/checkpoint_best.pt"
 print(chkpt_path)  # BACE_bs_16_lr_3e-5_totalNum_1135_warmup_181/ in test 
 bart = BARTModel.from_pretrained(model,  checkpoint_file = chkpt_path, 
                                  bpe="sentencepiece",

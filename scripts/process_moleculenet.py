@@ -2,21 +2,17 @@
 from __future__ import print_function
 from __future__ import division
 from __future__ import unicode_literals
-# import process
-# import process.classAcuteOralToxicity
-# import process.regAcuteOralToxicity
-# import process.genotoxicity
-# import process.ames
 from scripts import *
-
-from ast import arg
+from scripts import process
 import numpy as np
+from ast import arg
+from rdkit import Chem
 import deepchem as dc
 import pandas as pd
 import argparse
 import json
 import os
-
+# os.environ['MKL_THREADING_LAYER'] = 'GNU'
 
 EMPTY_INDEX = -1
 
@@ -61,9 +57,23 @@ elif  args.dataset_name == "classAcuteOralToxicity":
 
 elif args.dataset_name == "Genotoxicity" :
     df = process.genotoxicity(args.dataset_name, path)
+
+elif args.dataset_name == "japan" :
+    df = process.japan(args.dataset_name, path) 
+
+elif args.dataset_name == "snyder_negatives_451" :
+    df = process.snyder_negatives_451(args.dataset_name, path)   
     
 elif args.dataset_name == "Ames" :
-    df = process.ames(args.dataset_name, path)
+    df = process.ames(args.dataset_name, path, dataset["smiles_col_name"], dataset['label_col_name'])
+
+elif args.dataset_name == "ZINC" :
+    train_df, valid_df, test_df = process.ZINC(args.dataset_name, path)
+
+elif args.dataset_name == "BBBP-balanced" :
+    test_df = pd.read_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/test_{args.dataset_name}.csv")
+    train_df = pd.read_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/train_{args.dataset_name}.csv")
+    valid_df = pd.read_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/valid_{args.dataset_name}.csv")
     
 else:
     # For MoleculeNet data
@@ -89,8 +99,8 @@ else:
     valid_df.drop(remove_cols, axis='columns', inplace=True)
     train_df.drop(remove_cols, axis='columns', inplace=True)
     test_df.drop(remove_cols, axis='columns', inplace=True)
-
-    print(train_df.head())
+    
+    # print(train_df.head())
 
     if dataset['filter']:
         assert len(dataset['class_index']) == 1, "We do not want to filter multi-task datasets."
@@ -113,9 +123,16 @@ else:
         test_df.replace("", EMPTY_INDEX, inplace=True)
         test_df.fillna(EMPTY_INDEX, inplace=True)
 
-if args.dataset_name == "Ames" or args.dataset_name == "classAcuteOralToxicity" or args.dataset_name == "regAcuteOralToxicity" or args.dataset_name == "Genotoxicity"  :
-    train_df, valid_df, test_df = process.split_train_val_test(df = df, smiles_col_name = dataset['smiles_col_name'], label_col_name = dataset["label_col_name"])
+if (args.dataset_name=="japan" or args.dataset_name=="snyder_negatives_451"
+    or args.dataset_name == "Ames" or args.dataset_name == "classAcuteOralToxicity" 
+    or args.dataset_name == "regAcuteOralToxicity"
+        or args.dataset_name == "Genotoxicity" ) :
+    label_col_name = dataset["label_col_name"]
+    smiles_col_name = dataset['smiles_col_name']
+    
+    train_df, valid_df, test_df = process.split_train_val_test(df, dataset['smiles_col_name'], dataset['label_col_name'])
 if len(dataset["class_index"]) >1:
+    print("___________________")
     for i in range(len(dataset["class_index"])):
         test_df.to_csv(f"{store_path}/{args.dataset_name}_{i}/{args.dataset_name}/test_{args.dataset_name}.csv")
         train_df.to_csv(f"{store_path}/{args.dataset_name}_{i}/{args.dataset_name}/train_{args.dataset_name}.csv")
@@ -146,11 +163,10 @@ if dataset["type"] == "regression":
 
 if dataset["type"] == "classification":
     if len(dataset["class_index"]) >1:
+        print("___________________")
         class_dict = {}
         for cii in range(len(dataset["class_index"])):
-            l = train_df.iloc[:, dataset["class_index"][cii]].tolist()
-            a = list(map(int, l))
-            class_dict["class_train" +str(cii)] = a
+            class_dict["class_train" +str(cii)] = list(map(int, train_df.iloc[:, dataset["class_index"][cii]].tolist()))
             class_dict["class_val" +str(cii)] =list(map(int, valid_df.iloc[:, dataset["class_index"][cii]].tolist()))
             class_dict["class_test" +str(cii)] =list(map(int, test_df.iloc[:, dataset["class_index"][cii]].tolist()))
 
@@ -160,9 +176,14 @@ if dataset["type"] == "classification":
         class_val = list(map(int, valid_df.iloc[:, ci].tolist()))
         class_test = list(map(int, test_df.iloc[:, ci].tolist()))
 
+# train_df.iloc[:, si] = train_df.iloc[:, si].apply(Chem.CanonSmiles)
+# valid_df.iloc[:, si] = valid_df.iloc[:, si].apply(Chem.CanonSmiles)
+# test_df.iloc[:, si] = test_df.iloc[:, si].apply(Chem.CanonSmiles)
+
 smiles_train = list(map(str, train_df.iloc[:, si].tolist()))
 smiles_val = list(map(str, valid_df.iloc[:, si].tolist()))
 smiles_test = list(map(str, test_df.iloc[:, si].tolist()))
+
 
 if dataset["type"] =='regression':
     os.system(f'mkdir {store_path}/{args.dataset_name}/label')
@@ -226,12 +247,15 @@ for name, smiles in zip(names, (smiles_train, smiles_val, smiles_test)):
     print(name + ".target")
     print(args.dataset_name )
     if len(dataset["class_index"]) >1:
+        print("________________________")
+        path_ = []
         for i in range(len(dataset["class_index"])):
             new_path = f"{store_path}/{args.dataset_name}_{i}/raw/" + name + ".input"
-            X_splits.append(new_path)
+            path_.append(new_path)
             with open(new_path, "w+") as f:
                 for smile in smiles:
                     f.write(f"{smile}\n")
+        X_splits.append(path_)
     else:
         new_path = f"{store_path}/{args.dataset_name}/raw/" + name + ".input" 
         X_splits.append(new_path)
@@ -267,27 +291,55 @@ else:
                 f.write(f"{str(target)}\n")
 
 # Tokenize Texts
-print("Tokenizing")
-splits = []
-for path in X_splits:
-    cur_path = path.replace('raw', 'tokenized')
-    print(path)
-    print(cur_path)
-    splits.append(cur_path)
-    cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {path} --outputs {cur_path} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
-    print(cmd)
-    os.system(cmd)
 
-X_splits = splits
+print("Tokenizing")
+
+if len(dataset["class_index"]) > 1:
+
+    split_train = []
+    split_valid = []
+    split_test = []
+    for train_path, valid_path, test_path in zip(X_splits[0], X_splits[1], X_splits[2]):
+        cur_train = train_path.replace('raw', 'tokenized')
+        cur_valid = valid_path.replace('raw', 'tokenized')
+        cur_test = test_path.replace('raw', 'tokenized')
+        # print(path)
+        # print(cur_path)
+        split_train.append(cur_train)
+        split_valid.append(cur_valid)
+        split_test.append(cur_test)
+        cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {train_path} --outputs {cur_train} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+        print(cmd)
+        os.system(cmd)
+        cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {valid_path} --outputs {cur_valid} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+        print(cmd)
+        os.system(cmd)
+        cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {test_path} --outputs {cur_test} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+        print(cmd)
+        os.system(cmd)
+    X_splits[0], X_splits[1], X_splits[2] = split_train, split_valid, split_test
+
+else:
+    splits = []
+    for path in X_splits:
+        cur_path = path.replace('raw', 'tokenized')
+        print(path)
+        print(cur_path)
+        splits.append(cur_path)
+        cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {path} --outputs {cur_path} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+        print(cmd)
+        os.system(cmd)
+
+    X_splits = splits
 
 if dataset["type"] == "classification":
     if len(dataset["class_index"]) > 1:
         for i in range(len(dataset['class_index'])):
 
             os.system(('fairseq-preprocess --only-source '
-                f'--trainpref "{X_splits[0]}" '
-                f'--validpref "{X_splits[1]}" '
-                f'--testpref "{X_splits[2]}" '
+                f'--trainpref "{X_splits[0][i]}" '
+                f'--validpref "{X_splits[1][i]}" '
+                f'--testpref "{X_splits[2][i]}" '
                 f'--destdir "{store_path}/{args.dataset_name}_{i}/processed/input0" --workers 60 '
                 '--srcdict /home/gayane/BartLM/Bart/chemical/tokenizer/chem.vocab.fs'))
             os.system(('fairseq-preprocess '

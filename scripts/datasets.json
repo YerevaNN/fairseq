@@ -106,6 +106,19 @@
         "score": "roc-auc"
     },
 
+    "ZINC": {
+        "load_name": "ZINC",
+        "type": "classification",
+        "label_col_name": "target",
+        "smiles_col_name": "input",
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "filter": true,
+        "split_type": "random",
+        "score": "roc-auc"
+    },
     "japan": {
         "type": "classification",
         "class_index": [
