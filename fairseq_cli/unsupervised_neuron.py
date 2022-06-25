@@ -364,12 +364,14 @@ def plot_mlot(reg_model, nnotzero, nonzero_positions, acc, roc_auc, trX, trY, va
     plt.hist(sentiment_unit[trY_plot == 0], bins=25, alpha=0.5, label='neg')
     plt.hist(sentiment_unit[trY_plot == 1], bins=25, alpha=0.5, label='pos')
     plt.legend()
+    plt.tight_layout()
     plt.savefig(dist_save_dir.joinpath(f"{reg_model.C}.png"))
     plt.clf()
 
     vaX_plot = vaX.cpu().numpy()
     vaY_plot = vaY.cpu().numpy().ravel()
     metrics_skl.plot_roc_curve(reg_model, vaX_plot, vaY_plot)
+    plt.tight_layout()
     plt.savefig(auc_roc_save_dir.joinpath(f"{reg_model.C}.png"))
     plt.clf()
 

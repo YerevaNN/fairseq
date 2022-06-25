@@ -316,6 +316,7 @@ def plot_mlot(X, Y, i, subset, model_path, data_path, pooling):
             plt.scatter(embedding[:, 0], embedding[:, 1], c=[sns.color_palette()[y] for y in Y])
             plt.gca().set_aspect('equal', 'datalim')
             plt.title(f"UMAP projection of {subset}", fontsize=24)
+            plt.tight_layout()
             plt.savefig(log_save_dir.joinpath(f"{subset}.{i}.{n_neighbor}.{min_dist}.png"))
             plt.clf()
 

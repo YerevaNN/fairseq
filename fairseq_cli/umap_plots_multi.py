@@ -316,6 +316,7 @@ def plot(embedding, Y, ground_embedding, ground_Y, dataset, ground_dataset, log_
 
     sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="label", alpha=0.85)
     # sns.kdeplot(data=df, x="x", y="y", shade=True, hue="dataset", alpha=0.85)
+    plt.tight_layout()
     plt.savefig(log_save_dir.joinpath(f"{subset}-{n_neighbor}-{min_dist}.png"))
     plt.clf()
 

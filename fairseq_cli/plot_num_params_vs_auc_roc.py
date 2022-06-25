@@ -60,6 +60,8 @@ sns.despine()
 
 pools = ["avg", "last"]
 base_dir = Path("/home/tmyn/toxo/un-logs")
+output_dir = Path("nf-vs-auc")
+output_dir.mkdir(parents=True, exist_ok=True)
 for pool in pools:
     pool_dir = base_dir.joinpath(pool)
     task_names = [name for name in os.listdir(pool_dir) if os.path.isdir(pool_dir.joinpath(name))]
@@ -103,7 +105,8 @@ for pool in pools:
     plt.xlabel("Number of Features")
     plt.xscale('log')
     plt.ylabel("AUC-ROC score")
-    plt.savefig(f"nf-vs-auc/{pool}.pretrained.png")
+    plt.tight_layout()
+    plt.savefig(output_dir.joinpath(f"{pool}.pretrained.png"))
     plt.cla()
 
     # finetuned
@@ -114,7 +117,8 @@ for pool in pools:
     plt.xlabel("Number of Features")
     plt.xscale('log')
     plt.ylabel("AUC-ROC score")
-    plt.savefig(f"nf-vs-auc/{pool}.finetuned.png")
+    plt.tight_layout()
+    plt.savefig(output_dir.joinpath(f"{pool}.finetuned.png"))
     plt.cla()
 
     # combined
@@ -128,5 +132,6 @@ for pool in pools:
     plt.xlabel("Number of Features")
     plt.xscale('log')
     plt.ylabel("AUC-ROC score")
-    plt.savefig(f"nf-vs-auc/{pool}.combined.png")
+    plt.tight_layout()
+    plt.savefig(output_dir.joinpath(f"{pool}.combined.png"))
     plt.cla()
