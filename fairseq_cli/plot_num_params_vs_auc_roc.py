@@ -59,7 +59,7 @@ sns.despine()
 
 
 pools = ["avg", "last"]
-base_dir = Path("/home/tmyn/toxo/un-logs")
+base_dir = Path("un-logs")
 output_dir = Path("nf-vs-auc")
 output_dir.mkdir(parents=True, exist_ok=True)
 for pool in pools:
