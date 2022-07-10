@@ -1,5 +1,8 @@
 #!/usr/bin/env python3 -u
+from fairseq import utils
+import torch.nn.functional as F
 import os
+from fairseq.criterions.cross_entropy import CrossEntropyCriterion
 from fairseq.trainer import Trainer
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.logging import meters, metrics
@@ -21,7 +24,7 @@ import math
 import os
 import sys
 from typing import Callable, List, Optional, Tuple
-
+import json
 from collections import OrderedDict
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -274,149 +277,52 @@ def pool(pooling: str, output_tok: torch.Tensor, **kwargs):
         raise NotImplemented(f"pooling method '{pooling}' is not implemented")
 
 
-def extract_features(itr, model, pooling, num_search_batches=-1):
-    subsetX_list = []
-    subsetY_list = []
+def compute_loss(model, net_output, sample, padding_idx):
+    lprobs = model.get_normalized_probs(net_output, log_probs=True)
+    lprobs = lprobs.view(-1, lprobs.size(-1))
+    target = sample["prev_output_tokens"].view(-1)
+    loss = F.nll_loss(
+        lprobs,
+        target,
+        ignore_index=padding_idx,
+        reduction="mean",
+    )
+    return loss
+
+
+def calc_ppl(itr, subset, dataset_name, model, padding_idx, log_dir, num_search_batches=-1):
+    save_dir = log_dir.joinpath(subset)
+    os.makedirs(save_dir, exist_ok=True)
+    logging_output = {
+        "loss": [],
+        "ppl": []
+    }
+
     with torch.no_grad():
-        for i, sample in enumerate(itr):
-            if num_search_batches > -1 and i >= num_search_batches:
-                break
-            # for sample in samples:
-            subsetX_sample = move_to(sample['net_input'], device)
-            subsetY_sample = move_to(sample['target'], device)
+        for i, sample in tqdm(enumerate(itr)):
+            if i % 100 == 0:
+                if num_search_batches > -1 and i >= num_search_batches:
+                    break
+                sample = move_to(sample['net_input'], device)
 
-            output_tok, _ = model(**subsetX_sample)
-            output = pool(pooling, output_tok, input_tok=subsetX_sample)
-            subsetX_list.append(output)
-            subsetY_list.append(subsetY_sample)
+                net_output = model(**sample)
+                loss = compute_loss(model, net_output, sample, padding_idx)
 
-    subsetX = torch.concat(subsetX_list, dim=0)
-    subsetY = torch.concat(subsetY_list, dim=0)
+                logging_output["loss"].append(float(loss.data))
+                logging_output["ppl"].append(utils.get_perplexity(loss))
 
-    return subsetX, subsetY
-
-
-def plot(embedding, Y, ground_embedding, ground_Y, dataset, ground_dataset, log_save_dir, subset, n_neighbor, min_dist):
-    data = {
-        "x": embedding[:, 0].tolist(),
-        "y": embedding[:, 1].tolist(),
-        "label": Y.squeeze().tolist(),
-        "dataset": dataset
-    }
-    df = pd.DataFrame(data=data)
-
-    ground_data = {
-        "x": ground_embedding[:, 0].tolist(),
-        "y": ground_embedding[:, 1].tolist(),
-        "label": ground_Y.squeeze().tolist(),
-        "dataset": ground_dataset
-    }
-    ground_df = pd.DataFrame(data=ground_data)
-    sns.kdeplot(x=ground_df.x, y=ground_df.y, cmap="light:b", shade=True, bw_adjust=.5)
-    # sns.kdeplot(x=ground_df.x, y=ground_df.y)
-
-    sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="label", alpha=0.85)
-    # sns.kdeplot(data=df, x="x", y="y", shade=True, hue="dataset", alpha=0.85)
-    plt.tight_layout()
-    plt.savefig(log_save_dir.joinpath(f"{subset}-{n_neighbor}-{min_dist}.png"))
-    plt.clf()
-
-
-def fit_and_plot(X, Y, groundX, groundY, dataset, ground_dataset, dir_name, subset, pooling, umap_fit_policy):
-    log_save_dir = Path(f"./umap-logs-{dir_name}/{pooling}/{umap_fit_policy}")
-    log_save_dir.mkdir(parents=True, exist_ok=True)
-
-    plt.gca().set_aspect('equal', 'datalim')
-    plt.legend(fontsize=14, markerscale=2, facecolor='w')
-
-    n_neighbors = [10, 50, 100]
-    min_dists = [0.0, 0.25, 0.5, 0.99]
-    for n_neighbor in n_neighbors:
-        for min_dist in min_dists:
-            logging.info(f"--------------------- {subset}-{n_neighbor}-{min_dist} ---------------------")
-            plt.title(
-                f"UMAP projection of {subset}, using the '{ground_dataset}' as the ground dataset - number of neighbours:{n_neighbor}, min distance:{min_dist}", fontsize=15)
-            reducer = umap.UMAP(n_neighbors=n_neighbor, min_dist=min_dist)
-
-            if umap_fit_policy == "grouped":
-                ground_embedding = reducer.fit_transform(groundX)
-                embedding = reducer.fit_transform(X)
-            elif umap_fit_policy == "seperate":
-                ground_embedding = reducer.fit_transform(groundX)
-                embeddings = []
-                curr_da = dataset[0]
-                pivot = 0
-                for i in range(len(dataset)):
-                    if dataset[i] != curr_da:
-                        sub_X = X[pivot:i, :]
-                        embedding = reducer.fit_transform(sub_X)
-                        embeddings.append(embedding)
-                        curr_da = dataset[i]
-                        pivot = i
-                    if i == len(dataset) - 1:
-                        sub_X = X[pivot:, :]
-                        embedding = reducer.fit_transform(sub_X)
-                        embeddings.append(embedding)
-                embedding = np.concatenate(embeddings)
-            else:
-                raise NotImplementedError(f"umap_fit_policy method {umap_fit_policy}")
-
-            plot(embedding, Y, ground_embedding, groundY, dataset, ground_dataset, log_save_dir, subset, n_neighbor, min_dist)
+    with open(save_dir.joinpath(f"{dataset_name}.jsonl"), "w") as f:
+        logging_dump = {
+            "loss": np.mean(logging_output['loss']),
+            "ppl": np.mean(logging_output['ppl'])
+        }
+        json.dump(logging_dump, f)
 
 
 @metrics.aggregate("train")
 def train(
     cfg: DictConfig, trainer: Trainer, task: tasks.FairseqTask, epoch_itr, datasets, checkpoints, **kwargs
 ) -> Tuple[List[Optional[float]], bool]:
-    rc_dict = {
-        'figure.figsize': (12.8, 9.675),
-        'figure.dpi': 300,
-        'figure.titlesize': 35,
-        'axes.titlesize': 35,
-        'axes.labelsize': 35,
-        'xtick.labelsize': 30,
-        'ytick.labelsize': 30,
-        'axes.facecolor': 'white',
-        'axes.edgecolor': 'black',
-        'axes.grid': False,
-        'axes.axisbelow': 'line',
-        'axes.labelcolor': 'black',
-        'figure.facecolor': 'white',
-        'grid.color': '#ffffff',
-        'grid.linestyle': '-',
-        'text.color': 'black',
-        'xtick.color': 'black',
-        'ytick.color': 'black',
-        'xtick.direction': 'out',
-        'ytick.direction': 'out',
-        #  'lines.solid_capstyle': <CapStyle.projecting: 'projecting'>,
-        'patch.edgecolor': 'black',
-        'patch.force_edgecolor': False,
-        'image.cmap': 'viridis',
-        'font.family': ['sans-serif'],
-        'font.sans-serif': ['DejaVu Sans',
-                            'Bitstream Vera Sans',
-                            'Computer Modern Sans Serif',
-                            'Lucida Grande',
-                            'Verdana',
-                            'Geneva',
-                            'Lucid',
-                            'Arial',
-                            'Helvetica',
-                            'Avant Garde',
-                            'sans-serif'],
-        'xtick.bottom': True,
-        'xtick.top': False,
-        'ytick.left': True,
-        'ytick.right': True,
-        'axes.spines.left': True,
-        'axes.spines.bottom': True,
-        'axes.spines.right': True,
-        'axes.spines.top': True}
-
-    sns.set(rc=rc_dict)
-    sns.despine()
-
     # bart.model
     """Train the model for one epoch and return validation losses."""
     trainer.model.eval()
@@ -424,110 +330,43 @@ def train(
     ground_dataset = cfg.model.ground_dataset
     # trivial caching
     dir_name = "-".join([dataset.rstrip("/").split("/")[-2].lower() for dataset in datasets])
-    cache_dir = Path("cache").joinpath(dir_name)
+    save_dir = Path("ppl_multi").joinpath(dir_name)
+    os.makedirs(save_dir, exist_ok=True)
 
-    if cache_dir.exists():
-        trXs_stack = torch.load(cache_dir.joinpath("trXs_stack.pt"))
-        trYs_stack = torch.load(cache_dir.joinpath("trYs_stack.pt"))
-        vaXs_stack = torch.load(cache_dir.joinpath("vaXs_stack.pt"))
-        vaYs_stack = torch.load(cache_dir.joinpath("vaYs_stack.pt"))
-        valDatasets = torch.load(cache_dir.joinpath("valDatasets.pt"))
-        trainDatasets = torch.load(cache_dir.joinpath("trainDatasets.pt"))
+    for dataset, checkpoint in tqdm(zip(datasets, checkpoints), total=len(datasets)):
+        dataset_name = dataset.rstrip("/").split("/")[-2].lower()
+        print(f"dataset {dataset_name}")
 
-        trainGroundX = torch.load(cache_dir.joinpath("trainGroundX.pt"))
-        trainGroundY = torch.load(cache_dir.joinpath("trainGroundY.pt"))
-        valGroundX = torch.load(cache_dir.joinpath("valGroundX.pt"))
-        valGroundY = torch.load(cache_dir.joinpath("valGroundY.pt"))
-    else:
-        valDatasets = []
-        vaXs = []
-        vaYs = []
-        trainDatasets = []
-        trXs = []
-        trYs = []
-        for dataset, checkpoint in tqdm(zip(datasets, checkpoints), total=len(datasets)):
-            dataset_name = dataset.rstrip("/").split("/")[-2].lower()
-            print(f"dataset {dataset_name}")
-            cfg.model.data = dataset
-            cfg.task.data = dataset
-            cfg.data = dataset
-            cfg.checkpoint.restore_file = checkpoint
-            cfg.model.restore_file = checkpoint
+        cfg.model.data = dataset
+        cfg.task.data = dataset
+        cfg.data = dataset
+        cfg.checkpoint.restore_file = checkpoint
+        cfg.model.restore_file = checkpoint
 
-            sub_task = tasks.setup_task(cfg.task)
-            sub_trainer = Trainer(cfg, sub_task, kwargs["model"], kwargs["criterion"], kwargs["quantizer"])
+        sub_task = tasks.setup_task(cfg.task)
+        # model = sub_task.build_model(cfg.model)
+        # criterion = sub_task.build_criterion(cfg.criterion)
+        sub_trainer = Trainer(cfg, sub_task, kwargs["model"], kwargs["criterion"], kwargs["quantizer"])
 
-            # val
-            for valid_sub_split in cfg.dataset.valid_subset.split(","):
-                sub_task.load_dataset(valid_sub_split, combine=False, epoch=1)
-            itr_valid = sub_trainer.get_valid_iterator("valid").next_epoch_itr(shuffle=False, set_dataset_epoch=False)
-            vaX, vaY = extract_features(itr_valid, trainer.model, cfg.model.pool)
-            vaX = vaX.cpu()
-            vaY = vaY.cpu()
+        # val
+        for valid_sub_split in cfg.dataset.valid_subset.split(","):
+            sub_task.load_dataset(valid_sub_split, combine=False, epoch=1)
+        itr_valid = sub_trainer.get_valid_iterator("valid").next_epoch_itr(shuffle=False, set_dataset_epoch=False)
+        calc_ppl(itr_valid, "valid", dataset_name, trainer.model, task.dictionary.pad(), save_dir)
 
-            if dataset_name == ground_dataset:
-                assert "valGroundX" not in locals()
-                assert "valGroundY" not in locals()
-                valGroundX = vaX
-                valGroundY = vaY
-            else:
-                vaXs.append(vaX)
-                vaYs.append(vaY)
-                valDatasets += [dataset_name]*vaX.shape[0]
+        # train
+        epoch_itr = sub_trainer.get_train_iterator(
+            epoch=1, load_dataset=True, disable_iterator_cache=sub_task.has_sharded_data("train")
+        )
+        itr_train = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
+            epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
+        calc_ppl(itr_train, "train", dataset_name, trainer.model, task.dictionary.pad(), save_dir)
 
-            # train
-            epoch_itr = sub_trainer.get_train_iterator(
-                epoch=1, load_dataset=True, disable_iterator_cache=sub_task.has_sharded_data("train")
-            )
-            itr_train = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
-                epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
-            trX, trY = extract_features(itr_train, trainer.model, cfg.model.pool)
-            print("------------------------------------------")
-            print(f"{checkpoint} has dim: {trX.shape}")
-            print("\n")
-            trX = trX.cpu()
-            trY = trY.cpu()
+        del sub_trainer
+        del sub_task
+        del epoch_itr
 
-            if dataset_name == ground_dataset:
-                assert "trainGroundX" not in locals()
-                assert "trainGroundY" not in locals()
-                trainGroundX = trX
-                trainGroundY = trY
-            else:
-                trXs.append(trX)
-                trYs.append(trY)
-                trainDatasets += [dataset_name]*trX.shape[0]
-
-            del sub_trainer
-            del sub_task
-            del epoch_itr
-            # torch.cuda.empty_cache()
-
-        trXs_stack = torch.concat(trXs, dim=0)
-        trYs_stack = torch.concat(trYs, dim=0)
-        vaXs_stack = torch.concat(vaXs, dim=0)
-        vaYs_stack = torch.concat(vaYs, dim=0)
-
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        torch.save(trXs_stack, cache_dir.joinpath("trXs_stack.pt"))
-        torch.save(trYs_stack, cache_dir.joinpath("trYs_stack.pt"))
-        torch.save(vaXs_stack, cache_dir.joinpath("vaXs_stack.pt"))
-        torch.save(vaYs_stack, cache_dir.joinpath("vaYs_stack.pt"))
-        torch.save(valDatasets, cache_dir.joinpath("valDatasets.pt"))
-        torch.save(trainDatasets, cache_dir.joinpath("trainDatasets.pt"))
-
-        torch.save(trainGroundX, cache_dir.joinpath("trainGroundX.pt"))
-        torch.save(trainGroundY, cache_dir.joinpath("trainGroundY.pt"))
-        torch.save(valGroundX, cache_dir.joinpath("valGroundX.pt"))
-        torch.save(valGroundY, cache_dir.joinpath("valGroundY.pt"))
-
-    sns.set(style='white', context='notebook', rc={'figure.figsize': (14, 10)})
-
-    for subset, X, Y, groundX, groundY, dataset in [("valid", vaXs_stack, vaYs_stack, valGroundX, valGroundY, valDatasets), ("train", trXs_stack, trYs_stack, trainGroundX, trainGroundY, trainDatasets)]:
-        fit_and_plot(X, Y, groundX, groundY, dataset, ground_dataset, dir_name,
-                     subset, cfg.model.pool, cfg.model.umap_fit_policy)
-
-    sys.exit()
+    return
 
 
 def cli_main(
