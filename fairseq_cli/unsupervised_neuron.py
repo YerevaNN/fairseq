@@ -216,8 +216,9 @@ def main(cfg: FairseqConfig) -> None:
         logger.info("ioPath PathManager finished waiting.")
 
 
+# 2**np.arange(-8, 1).astype(np.float),
 def init_reg_cv(trX, trY, vaX, vaY, penalty='l1',
-                C=2**np.arange(-8, 1).astype(np.float), seed=42):
+                C=2**np.arange(-15, -4).astype(np.float), seed=42):
     """
     trX: [n_samples, n_units]
     trY: [n_samples, 1]
@@ -250,8 +251,11 @@ def train_with_reg_cv(model, trX, trY, penalty='l1', seed=42):
     model.fit(trX, trY)
     nnotzero = np.sum(model.coef_ != 0)
     nonzero_positions = np.nonzero(np.squeeze(model.coef_, 0))[0]
+    nonzero_values = []
+    if nonzero_positions.any():
+        nonzero_values = [model.coef_[0][position] for position in nonzero_positions]
 
-    return nnotzero, nonzero_positions
+    return nnotzero, nonzero_positions, nonzero_values
 
 
 def score(model, vaX, vaY):
@@ -327,11 +331,12 @@ def extract_features(itr, trainer, pooling, num_search_batches=-1):
     return subsetX, subsetY
 
 
-def plot_mlot(reg_model, nnotzero, nonzero_positions, acc, roc_auc, trX, trY, vaX, vaY, model_path, data_path, pooling):
+def plot_mlot(reg_model, nnotzero, nonzero_positions, nonzero_values, acc, roc_auc, trX, trY, vaX, vaY, model_path, data_path, pooling):
     print("****************************************")
     print(f"   {reg_model.C} - C")
     print(f"   {nnotzero} - features used")
     print(f"   {list(nonzero_positions)} - features indices used")
+    print(f"   {list(nonzero_values)} - features values")
     print(f"   {acc} - val accuracy")
     print(f"   {roc_auc} - val roc_auc")
     print("****************************************")
@@ -339,17 +344,18 @@ def plot_mlot(reg_model, nnotzero, nonzero_positions, acc, roc_auc, trX, trY, va
     data_path = data_path.rstrip("/").lstrip("/").split("/")[-2]
     model_path = ".".join(model_path.rstrip("/").lstrip("/").split("/")[-2:])
 
-    log_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}")
+    log_save_dir = Path(f"./un-logs-C-smaller/{pooling}/{data_path}/{model_path}")
     log_save_dir.mkdir(parents=True, exist_ok=True)
 
-    dist_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}/dist")
+    dist_save_dir = Path(f"./un-logs-C-smaller/{pooling}/{data_path}/{model_path}/dist")
     dist_save_dir.mkdir(parents=True, exist_ok=True)
 
-    auc_roc_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}/auc_roc")
+    auc_roc_save_dir = Path(f"./un-logs-C-smaller/{pooling}/{data_path}/{model_path}/auc_roc")
     auc_roc_save_dir.mkdir(parents=True, exist_ok=True)
 
     logs = [f"{reg_model.C} - C", f"{nnotzero} - features used",
             f"{list(nonzero_positions)} - features indices used",
+            f"{list(nonzero_values)} - features values",
             f"{acc} - val accuracy", f"{roc_auc} - val roc_auc"]
 
     with open(log_save_dir.joinpath(f"{reg_model.C}.log.txt"), "w") as f:
@@ -401,10 +407,10 @@ def train(
     trX, trY = extract_features(itr_train, trainer, cfg.model.pool)
 
     for reg_model in reg_models:
-        nnotzero, nonzero_positions = train_with_reg_cv(reg_model, trX, trY)
+        nnotzero, nonzero_positions, nonzero_values = train_with_reg_cv(reg_model, trX, trY)
         acc, roc_auc = score(reg_model, vaX, vaY)
 
-        plot_mlot(reg_model, nnotzero, nonzero_positions, acc, roc_auc, trX,
+        plot_mlot(reg_model, nnotzero, nonzero_positions, nonzero_values, acc, roc_auc, trX,
                   trY, vaX, vaY, cfg.model.restore_file, cfg.model.data, cfg.model.pool)
 
     return
