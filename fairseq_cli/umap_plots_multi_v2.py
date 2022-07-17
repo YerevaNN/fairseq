@@ -238,17 +238,11 @@ class Worker(Cachable):
         return self.umap_transforms[self.cfg.model.umap_fit_policy](self.dataset_instances, n_neighbors, min_dists)
 
     def fit_transform_umap_seperate(self, dataset_instances, n_neighbors, min_dists):
-        pass
-        for n_neighbor in n_neighbors:
-            for min_dist in min_dists:
-                self._fit_transform_umap()
-                self._fit_umap(dataset_name, self.dataset_instances[self.ground_dataset_name], n_neighbors, min_dists)
-                for dataset_name, dataset_instance in self.dataset_instances.items():
-                    if dataset_name != self.ground_dataset_name:
-                        self._fit_umap(dataset_name, dataset_instance, n_neighbors, min_dists)
+        # TODO(tmyn)
+        raise NotImplementedError("need to implement")
 
     def fit_transform_umap_grouped(self, dataset_instances, n_neighbors, min_dists):
-        features = self._concat_dataset_instances(dataset_instances, "features")
+        features = self._concat_dataset_instances(dataset_instances, "features").cpu()
 
         for n_neighbor in n_neighbors:
             for min_dist in min_dists:
@@ -259,7 +253,7 @@ class Worker(Cachable):
 
     def _fit_umap(self, features: torch.TensorType, n_neighbor: int, min_dist: float):
         self.reducer = umap.UMAP(n_neighbors=n_neighbor, min_dist=min_dist, low_memory=True)
-        self.reducer.fit(features.cpu())
+        self.reducer.fit(features)
 
     def _transform_umap(self, features):
         return self.reducer.transform(features)
