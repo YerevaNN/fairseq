@@ -235,14 +235,22 @@ class Worker(Cachable):
         return torch.concat(features, dim=0), torch.concat(labels, dim=0)
 
     def fit_transform_umap(self, n_neighbors: List[int], min_dists: List[float]):
-        return self.umap_transforms[self.cfg.model.umap_fit_policy](self.dataset_instances, n_neighbors, min_dists)
+        return self.umap_transforms[self.cfg.model.umap_fit_policy](n_neighbors, min_dists)
 
-    def fit_transform_umap_seperate(self, dataset_instances, n_neighbors, min_dists):
-        # TODO(tmyn)
-        raise NotImplementedError("need to implement")
+    def fit_transform_umap_seperate(self, n_neighbors, min_dists):
+        features = self._concat_dataset_instances(self.dataset_instances, "features").cpu()
+        ground_features = self._concat_dataset_instances(
+            {self.ground_dataset_name: self.dataset_instances[self.ground_dataset_name]}, "features").cpu()
 
-    def fit_transform_umap_grouped(self, dataset_instances, n_neighbors, min_dists):
-        features = self._concat_dataset_instances(dataset_instances, "features").cpu()
+        for n_neighbor in n_neighbors:
+            for min_dist in min_dists:
+                self._fit_umap(ground_features, n_neighbor=n_neighbor, min_dist=min_dist)
+                embeddings_full = self._transform_umap(features)
+                embeddings, ground_embeddings = self._seperate_ground(embeddings_full)
+                self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist)
+
+    def fit_transform_umap_grouped(self, n_neighbors, min_dists):
+        features = self._concat_dataset_instances(self.dataset_instances, "features").cpu()
 
         for n_neighbor in n_neighbors:
             for min_dist in min_dists:
