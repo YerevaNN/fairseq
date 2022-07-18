@@ -244,9 +244,13 @@ class Worker(Cachable):
 
         for n_neighbor in n_neighbors:
             for min_dist in min_dists:
+                logger.info(f"umap: n_neighbor:{n_neighbor}, min_dist:{min_dist}")
+                logger.info(f"   fitting...")
                 self._fit_umap(ground_features, n_neighbor=n_neighbor, min_dist=min_dist)
+                logger.info(f"   transforming...")
                 embeddings_full = self._transform_umap(features)
                 embeddings, ground_embeddings = self._seperate_ground(embeddings_full)
+                logger.info(f"   plotting...")
                 self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist)
 
     def fit_transform_umap_grouped(self, n_neighbors, min_dists):
