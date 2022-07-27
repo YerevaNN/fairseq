@@ -168,7 +168,7 @@ class Worker(Cachable):
                              self.dataset_instances[self.ground_dataset_name]["checkpoint_path"])
 
         self.umap_transforms = {
-            "seperate": self.fit_transform_umap_seperate,
+            "separate": self.fit_transform_umap_separate,
             "grouped": self.fit_transform_umap_grouped
         }
 
@@ -237,7 +237,7 @@ class Worker(Cachable):
     def fit_transform_umap(self, n_neighbors: List[int], min_dists: List[float]):
         return self.umap_transforms[self.cfg.model.umap_fit_policy](n_neighbors, min_dists)
 
-    def fit_transform_umap_seperate(self, n_neighbors, min_dists):
+    def fit_transform_umap_separate(self, n_neighbors, min_dists):
         features = self._concat_dataset_instances(self.dataset_instances, "features").cpu()
         ground_features = self._concat_dataset_instances(
             {self.ground_dataset_name: self.dataset_instances[self.ground_dataset_name]}, "features").cpu()
@@ -245,12 +245,12 @@ class Worker(Cachable):
         for n_neighbor in n_neighbors:
             for min_dist in min_dists:
                 logger.info(f"umap: n_neighbor:{n_neighbor}, min_dist:{min_dist}")
-                logger.info(f"   fitting...")
+                logger.info(f"fitting")
                 self._fit_umap(ground_features, n_neighbor=n_neighbor, min_dist=min_dist)
-                logger.info(f"   transforming...")
+                logger.info(f"transforming")
                 embeddings_full = self._transform_umap(features)
-                embeddings, ground_embeddings = self._seperate_ground(embeddings_full)
-                logger.info(f"   plotting...")
+                embeddings, ground_embeddings = self._separate_ground(embeddings_full)
+                logger.info(f"plotting")
                 self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist)
 
     def fit_transform_umap_grouped(self, n_neighbors, min_dists):
@@ -260,7 +260,7 @@ class Worker(Cachable):
             for min_dist in min_dists:
                 self._fit_umap(features, n_neighbor=n_neighbor, min_dist=min_dist)
                 embeddings_full = self._transform_umap(features)
-                embeddings, ground_embeddings = self._seperate_ground(embeddings_full)
+                embeddings, ground_embeddings = self._separate_ground(embeddings_full)
                 self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist)
 
     def _fit_umap(self, features: torch.TensorType, n_neighbor: int, min_dist: float):
@@ -270,7 +270,7 @@ class Worker(Cachable):
     def _transform_umap(self, features):
         return self.reducer.transform(features)
 
-    def _seperate_ground(self, obj):
+    def _separate_ground(self, obj):
         n_ground_dataset_items = 0
         for subset in self.subsets:
             n_ground_dataset_items += self.dataset_instances[self.ground_dataset_name][subset]["features"].shape[0]
@@ -383,8 +383,8 @@ def cli_main(
         "--umap-fit-policy",
         type=str,
         default="grouped",
-        choices=["grouped", "seperate"],
-        help="Method of fitting the umap. grouped: fits all the embs concatenated. seperate: fits each dataset emb seperatly",
+        choices=["grouped", "separate"],
+        help="Method of fitting the umap. grouped: fits all the embs concatenated. separate: fits each dataset emb seperatly",
     )
 
     parser.add_argument(
@@ -398,14 +398,14 @@ def cli_main(
         "--umap-datasets",
         type=str,
         default="",
-        help="list of datasets to plot on, comma seperate",
+        help="list of datasets to plot on, comma separate",
     )
 
     parser.add_argument(
         "--umap-checkpoints",
         type=str,
         default="",
-        help="list of checkpoints of each dataset, comma seperate",
+        help="list of checkpoints of each dataset, comma separate",
     )
 
     parser.add_argument(
