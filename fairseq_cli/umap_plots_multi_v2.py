@@ -140,6 +140,7 @@ class Worker(Cachable):
         self.datasets_paths = self.cfg.model.umap_datasets.split(",")
         self.checkpoints_paths = self.cfg.model.umap_checkpoints.split(",")
         self.ground_dataset_name = self.cfg.model.ground_dataset
+        self.max_n_batches = self.cfg.model.n_batches
         self.dataset_instances = {}
         for dataset_path, checkpoint_path in zip(self.datasets_paths, self.checkpoints_paths):
             self.dataset_instances[self._dataset_name(dataset_path)] = {
@@ -152,13 +153,12 @@ class Worker(Cachable):
 
         self.pooling_method = cfg.model.pooling_method
 
-        self.dir_name = "-".join([self.cfg.model.plot_policy, self.cfg.model.pooling_method] +
-                                 [dataset_name for dataset_name in self.dataset_instances.keys()])
+        self.dir_name = "-".join([dataset_name for dataset_name in self.dataset_instances.keys()])
         self.log_dir = Path(self.cfg.model.log_dir).joinpath(
-            self.dir_name, self.pooling_method, self.cfg.model.umap_fit_policy)
+            self.dir_name, str(self.max_n_batches) if self.max_n_batches is not None else "", self.cfg.model.plot_policy, self.pooling_method, self.cfg.model.umap_fit_policy)
         os.makedirs(self.log_dir, exist_ok=True)
 
-        self.cache_dir = Path("cache").joinpath(self.dir_name)
+        self.cache_dir = Path("cache").joinpath(self.dir_name, str(self.max_n_batches) if self.max_n_batches is not None else "", self.cfg.model.plot_policy, self.pooling_method)
         os.makedirs(self.cache_dir, exist_ok=True)
 
         Cachable.cache_dir = self.cache_dir
@@ -184,9 +184,16 @@ class Worker(Cachable):
 
         self.task = tasks.setup_task(self.cfg.task)
         self.model = self.task.build_model(self.cfg.model)
+        self.model.eval()
 
         self.criterion = self.task.build_criterion(self.cfg.criterion)
         self.trainer = Trainer(self.cfg, self.task, self.model, self.criterion)
+
+        checkpoint_utils.load_checkpoint(
+            self.cfg.checkpoint,
+            self.trainer,
+            disable_iterator_cache=self.task.has_sharded_data("train"),
+        )
 
     def get_iterator(self, subset: str):
         if subset == "valid":
@@ -222,15 +229,19 @@ class Worker(Cachable):
     def _extract_features(self, iterator, dataset_name, subset) -> torch.TensorType:
         features = []
         labels = []
+        c_n_batches = 0
         with torch.no_grad():
             for sample in iterator:
+                if self.max_n_batches is not None and c_n_batches >= self.max_n_batches:
+                    break
                 net_input = move_to(sample['net_input'], device)
                 target = move_to(sample['target'], device)
 
-                output_tok, _ = self.model(**net_input)
+                output_tok, _ = self.model.extract_features(**net_input)
                 output = self._pool(self.pooling_method, output_tok, input_tok=net_input)
                 features.append(output)
                 labels.append(target)
+                c_n_batches += 1
 
         return torch.concat(features, dim=0), torch.concat(labels, dim=0)
 
@@ -413,6 +424,13 @@ def cli_main(
         type=str,
         default="",
         help="the name of the dataset for which to plot the contoures (pre-training dataset)",
+    )
+
+    parser.add_argument(
+        "--n-batches",
+        type=int,
+        default=None,
+        help="the number of consecutive batches to get from each dataset subset",
     )
 
     args = options.parse_args_and_arch(parser, modify_parser=modify_parser)
