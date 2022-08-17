@@ -310,6 +310,8 @@ class Worker(Cachable):
                     embeddings_full = self._transform_umap(features)
                     embeddings, ground_embeddings = self._separate_ground(embeddings_full)
                     logger.info(f"plotting")
+                    torch.save(embeddings, self.log_dir.joinpath(f"[{i_repeat}]embeddings-{n_neighbor}-{min_dist}.pt"))
+                    torch.save(ground_embeddings, self.log_dir.joinpath(f"[{i_repeat}]ground_embeddings-{n_neighbor}-{min_dist}.pt"))
                     self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist, i_repeat=i_repeat)
 
     def _fit_umap(self, features: torch.TensorType, n_neighbor: int, min_dist: float):
