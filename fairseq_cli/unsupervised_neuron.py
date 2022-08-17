@@ -218,7 +218,7 @@ def main(cfg: FairseqConfig) -> None:
 
 # 2**np.arange(-8, 1).astype(np.float),
 def init_reg_cv(trX, trY, vaX, vaY, penalty='l1',
-                C=2**np.arange(-15, -4).astype(np.float), seed=42):
+                C=2**np.arange(-8, 1).astype(np.float), seed=42):
     """
     trX: [n_samples, n_units]
     trY: [n_samples, 1]
@@ -320,7 +320,7 @@ def extract_features(itr, trainer, pooling, num_search_batches=-1):
         subsetY_sample = move_to(sample['target'], device)
 
         with torch.no_grad():
-            output_tok, _ = trainer.model(**subsetX_sample)
+            output_tok, _ = trainer.model.extract_features(**subsetX_sample)
             output = pool(pooling, output_tok, input_tok=subsetX_sample)
         subsetX_list.append(output)
         subsetY_list.append(subsetY_sample)
@@ -344,13 +344,13 @@ def plot_mlot(reg_model, nnotzero, nonzero_positions, nonzero_values, acc, roc_a
     data_path = data_path.rstrip("/").lstrip("/").split("/")[-2]
     model_path = ".".join(model_path.rstrip("/").lstrip("/").split("/")[-2:])
 
-    log_save_dir = Path(f"./un-logs-C-smaller/{pooling}/{data_path}/{model_path}")
+    log_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}")
     log_save_dir.mkdir(parents=True, exist_ok=True)
 
-    dist_save_dir = Path(f"./un-logs-C-smaller/{pooling}/{data_path}/{model_path}/dist")
+    dist_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}/dist")
     dist_save_dir.mkdir(parents=True, exist_ok=True)
 
-    auc_roc_save_dir = Path(f"./un-logs-C-smaller/{pooling}/{data_path}/{model_path}/auc_roc")
+    auc_roc_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}/auc_roc")
     auc_roc_save_dir.mkdir(parents=True, exist_ok=True)
 
     logs = [f"{reg_model.C} - C", f"{nnotzero} - features used",

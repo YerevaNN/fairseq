@@ -1,9 +1,11 @@
 import os
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from pathlib import Path
-
-PRETRAINED_MODEL_NAME = "checkpoints.checkpoint_last"
+import pandas as pd
+# PRETRAINED_MODEL_NAME = "checkpoints.checkpoint_last"
+PRETRAINED_MODEL_NAME = "base.checkpoint_last"
 
 
 rc_dict = {
@@ -66,8 +68,8 @@ for pool in pools:
     pool_dir = base_dir.joinpath(pool)
     task_names = [name for name in os.listdir(pool_dir) if os.path.isdir(pool_dir.joinpath(name))]
 
-    records_pretrained = {}
-    records_finetuned = {}
+    records_pretrained = {"x": [], "y": [], "task": []}
+    records_finetuned = {"x": [], "y": [], "task": []}
     for task_name in task_names:
         task_name_dir = pool_dir.joinpath(task_name)
         model_names = os.listdir(task_name_dir)
@@ -87,21 +89,22 @@ for pool in pools:
                     auc_roc.append(float(lines[4].split(" ")[0][:5]))
 
             if model_name_dir.stem == PRETRAINED_MODEL_NAME:
-                records_pretrained[task_name] = {
-                    "x": num_features,
-                    "y": auc_roc,
-                }
+                records_pretrained["x"].append(num_features)
+                records_pretrained["y"].append(auc_roc)
+                records_pretrained["task"].append(task_name)
             else:
-                records_finetuned[task_name] = {
-                    "x": num_features,
-                    "y": auc_roc,
-                }
+                records_finetuned["x"].append(num_features)
+                records_finetuned["y"].append(auc_roc)
+                records_finetuned["task"].append(task_name)
 
     # pretrained
-    for d_name, data in records_pretrained.items():
-        sns.lineplot(x=data["x"], y=data["y"], marker='o', linewidth=2.0, label=d_name)
+    records_pretrained = pd.DataFrame.from_dict(records_pretrained)
+    for task_name in records_pretrained.task:
+        x = list(records_pretrained.loc[records_pretrained["task"] == task_name]["x"])[0]
+        y = list(records_pretrained.loc[records_pretrained["task"] == task_name]["y"])[0]
+        sns.lineplot(x=x, y=y, marker='o', linewidth=2.0, label=task_name)
 
-    plt.legend(loc="lower right")
+    plt.legend(loc="lower right", fontsize=22)
     plt.xlabel("Number of Features")
     plt.xscale('log')
     plt.ylabel("AUC-ROC score")
@@ -110,10 +113,19 @@ for pool in pools:
     plt.cla()
 
     # finetuned
-    for d_name, data in records_finetuned.items():
-        sns.lineplot(x=data["x"], y=data["y"], marker='o', linewidth=2.0, label=d_name)
+    records_finetuned_dots = {"x": [1024, 1024, 1024, 1024, 1024],
+                              "y": [99.2, 98.6, 96.3, 69.7, 99.0],
+                              "task": task_names}
+    records_finetuned_dots = pd.DataFrame.from_dict(records_finetuned_dots)
+    sns.scatterplot(data=records_finetuned_dots, x="x", y="y", marker="H", s=120, hue="task", legend=None)
 
-    plt.legend(loc="lower right")
+    records_finetuned = pd.DataFrame.from_dict(records_finetuned)
+    for task_name in records_finetuned.task:
+        x = list(records_finetuned.loc[records_finetuned["task"] == task_name]["x"])[0]
+        y = list(records_finetuned.loc[records_finetuned["task"] == task_name]["y"])[0]
+        sns.lineplot(x=x, y=y, marker='o', linewidth=2.0, label=task_name)
+
+    plt.legend(loc="lower right", fontsize=22)
     plt.xlabel("Number of Features")
     plt.xscale('log')
     plt.ylabel("AUC-ROC score")
@@ -121,17 +133,17 @@ for pool in pools:
     plt.savefig(output_dir.joinpath(f"{pool}.finetuned.png"))
     plt.cla()
 
-    # combined
-    for d_name, data in records_pretrained.items():
-        sns.lineplot(x=data["x"], y=data["y"], marker='o', linewidth=2.0, label=d_name)
+    # # combined
+    # for d_name, data in records_pretrained.items():
+    #     sns.lineplot(x=data["x"], y=data["y"], marker='o', linewidth=2.0, label=d_name)
 
-    for d_name, data in records_finetuned.items():
-        sns.lineplot(x=data["x"], y=data["y"], marker='o', linewidth=2.0, label=d_name, linestyle='--')
+    # for d_name, data in records_finetuned.items():
+    #     sns.lineplot(x=data["x"], y=data["y"], marker='o', linewidth=2.0, label=d_name, linestyle='--')
 
-    plt.legend(loc="lower right")
-    plt.xlabel("Number of Features")
-    plt.xscale('log')
-    plt.ylabel("AUC-ROC score")
-    plt.tight_layout()
-    plt.savefig(output_dir.joinpath(f"{pool}.combined.png"))
-    plt.cla()
+    # plt.legend(loc="lower right")
+    # plt.xlabel("Number of Features")
+    # plt.xscale('log')
+    # plt.ylabel("AUC-ROC score")
+    # plt.tight_layout()
+    # plt.savefig(output_dir.joinpath(f"{pool}.combined.png"))
+    # plt.cla()

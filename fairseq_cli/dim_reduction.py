@@ -20,7 +20,6 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import umap
 import pandas as pd
 from tqdm import tqdm
 import pickle
@@ -141,6 +140,7 @@ class Worker(Cachable):
         self.checkpoints_paths = self.cfg.model.umap_checkpoints.split(",")
         self.ground_dataset_name = self.cfg.model.ground_dataset
         self.max_n_batches = self.cfg.model.n_batches
+        self.method = self.cfg.model.method
         self.dataset_instances = {}
         for dataset_path, checkpoint_path in zip(self.datasets_paths, self.checkpoints_paths):
             self.dataset_instances[self._dataset_name(dataset_path)] = {
@@ -154,11 +154,12 @@ class Worker(Cachable):
         self.pooling_method = cfg.model.pooling_method
 
         self.dir_name = "-".join([dataset_name for dataset_name in self.dataset_instances.keys()])
-        self.log_dir = Path(self.cfg.model.log_dir).joinpath(
-            self.dir_name, str(self.max_n_batches) if self.max_n_batches is not None else "", self.cfg.model.plot_policy, self.pooling_method, self.cfg.model.umap_fit_policy)
+        self.log_dir = Path(self.cfg.model.log_dir).joinpath(self.method, self.dir_name, str(
+            self.max_n_batches) if self.max_n_batches is not None else "", self.cfg.model.plot_policy, self.pooling_method, self.cfg.model.fit_policy)
         os.makedirs(self.log_dir, exist_ok=True)
 
-        self.cache_dir = Path("cache").joinpath(self.dir_name, str(self.max_n_batches) if self.max_n_batches is not None else "", self.cfg.model.plot_policy, self.pooling_method)
+        self.cache_dir = Path("cache").joinpath(self.dir_name, str(self.max_n_batches)
+                                                if self.max_n_batches is not None else "", self.cfg.model.plot_policy, self.pooling_method)
         os.makedirs(self.cache_dir, exist_ok=True)
 
         Cachable.cache_dir = self.cache_dir
@@ -167,9 +168,19 @@ class Worker(Cachable):
             self.build_stack(self.dataset_instances[self.ground_dataset_name]["dataset_path"],
                              self.dataset_instances[self.ground_dataset_name]["checkpoint_path"])
 
+        self.methods = {
+            "umap": self.fit_transform_umap,
+            "mds": self.fit_transform_mds
+        }
+
         self.umap_transforms = {
             "separate": self.fit_transform_umap_separate,
             "grouped": self.fit_transform_umap_grouped
+        }
+
+        self.mds_transforms = {
+            "seperate": self.fit_transform_mds_seperate,
+            "grouped": self.fit_transform_mds_grouped,
         }
 
     def build_stack(self, dataset_path: str, checkpoint_path: str):
@@ -245,8 +256,36 @@ class Worker(Cachable):
 
         return torch.concat(features, dim=0), torch.concat(labels, dim=0)
 
+    def fit_transform(self, **kwargs):
+        return self.methods[self.method](**kwargs)
+
+    def fit_transform_mds(self, n_components: int):
+        try:
+            from sklearn.manifold import MDS
+        except ImportError:
+            print("Could not import sklearn.manifold.MDS")
+            return
+        return self.mds_transforms[self.cfg.model.fit_policy]
+
+    def fit_transform_mds_seperate(self):
+        pass
+
+    def fit_transform_mds_grouped(self):
+        pass
+
+    def _fit_mds(self):
+        pass
+
+    def _transform_umap(self):
+        pass
+
     def fit_transform_umap(self, n_neighbors: List[int], min_dists: List[float]):
-        return self.umap_transforms[self.cfg.model.umap_fit_policy](n_neighbors, min_dists)
+        try:
+            import umap
+        except ImportError:
+            print("Could not import umap")
+            return
+        return self.umap_transforms[self.cfg.model.fit_policy](n_neighbors, min_dists)
 
     def fit_transform_umap_separate(self, n_neighbors, min_dists):
         features = self._concat_dataset_instances(self.dataset_instances, "features").cpu()
@@ -368,13 +407,21 @@ def main(cfg: DictConfig) -> None:
     worker = Worker(cfg)
 
     worker.extract_features()
-    worker.fit_transform_umap(n_neighbors=[10, 50, 100], min_dists=[0.0, 0.25, 0.5, 0.99])
+    worker.fit_transform(n_neighbors=[10, 50, 100], min_dists=[0.0, 0.25, 0.5, 0.99])
 
 
 def cli_main(
     modify_parser: Optional[Callable[[argparse.ArgumentParser], None]] = None
 ) -> None:
     parser = options.get_training_parser()
+
+    parser.add_argument(
+        "--method",
+        type=str,
+        default="",
+        choices=["umap", "mds"],
+        help="method(algorithm) of dimensionality reduction",
+    )
 
     parser.add_argument(
         "--log-dir",
@@ -391,11 +438,11 @@ def cli_main(
     )
 
     parser.add_argument(
-        "--umap-fit-policy",
+        "--fit-policy",
         type=str,
         default="grouped",
         choices=["grouped", "separate"],
-        help="Method of fitting the umap. grouped: fits all the embs concatenated. separate: fits each dataset emb seperatly",
+        help="Method of fitting the umap. grouped: fits all the embs concatenated. separate: fits each dataset emb separatly",
     )
 
     parser.add_argument(
