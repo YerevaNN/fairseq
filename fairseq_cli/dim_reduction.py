@@ -17,6 +17,9 @@ from typing import TypeVar, Type, Callable, List, Optional, Tuple
 from collections import OrderedDict
 from pathlib import Path
 
+from sklearn.manifold import MDS
+import umap
+
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -260,11 +263,6 @@ class Worker(Cachable):
         return self.methods[self.method](**kwargs)
 
     def fit_transform_mds(self, n_components: int):
-        try:
-            from sklearn.manifold import MDS
-        except ImportError:
-            print("Could not import sklearn.manifold.MDS")
-            return
         return self.mds_transforms[self.cfg.model.fit_policy]
 
     def fit_transform_mds_seperate(self):
@@ -279,39 +277,40 @@ class Worker(Cachable):
     def _transform_umap(self):
         pass
 
-    def fit_transform_umap(self, n_neighbors: List[int], min_dists: List[float]):
-        try:
-            import umap
-        except ImportError:
-            print("Could not import umap")
-            return
-        return self.umap_transforms[self.cfg.model.fit_policy](n_neighbors, min_dists)
+    def fit_transform_umap(self, n_neighbors: List[int], min_dists: List[float], max_repeat: int):
+        return self.umap_transforms[self.cfg.model.fit_policy](n_neighbors, min_dists, max_repeat)
 
-    def fit_transform_umap_separate(self, n_neighbors, min_dists):
+    def fit_transform_umap_separate(self, n_neighbors, min_dists, max_repeat):
         features = self._concat_dataset_instances(self.dataset_instances, "features").cpu()
         ground_features = self._concat_dataset_instances(
             {self.ground_dataset_name: self.dataset_instances[self.ground_dataset_name]}, "features").cpu()
 
         for n_neighbor in n_neighbors:
             for min_dist in min_dists:
-                logger.info(f"umap: n_neighbor:{n_neighbor}, min_dist:{min_dist}")
-                logger.info(f"fitting")
-                self._fit_umap(ground_features, n_neighbor=n_neighbor, min_dist=min_dist)
-                logger.info(f"transforming")
-                embeddings_full = self._transform_umap(features)
-                embeddings, ground_embeddings = self._separate_ground(embeddings_full)
-                logger.info(f"plotting")
-                self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist)
+                for i_repeat in range(max_repeat):
+                    logger.info(f"umap[{i_repeat}]: n_neighbor:{n_neighbor}, min_dist:{min_dist}")
+                    logger.info(f"fitting")
+                    self._fit_umap(ground_features, n_neighbor=n_neighbor, min_dist=min_dist)
+                    logger.info(f"transforming")
+                    embeddings_full = self._transform_umap(features)
+                    embeddings, ground_embeddings = self._separate_ground(embeddings_full)
+                    logger.info(f"plotting")
+                    self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist, i_repeat=i_repeat)
 
-    def fit_transform_umap_grouped(self, n_neighbors, min_dists):
+    def fit_transform_umap_grouped(self, n_neighbors, min_dists, max_repeat):
         features = self._concat_dataset_instances(self.dataset_instances, "features").cpu()
 
         for n_neighbor in n_neighbors:
             for min_dist in min_dists:
-                self._fit_umap(features, n_neighbor=n_neighbor, min_dist=min_dist)
-                embeddings_full = self._transform_umap(features)
-                embeddings, ground_embeddings = self._separate_ground(embeddings_full)
-                self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist)
+                for i_repeat in range(max_repeat):
+                    logger.info(f"umap[{i_repeat}]: n_neighbor:{n_neighbor}, min_dist:{min_dist}")
+                    logger.info(f"fitting")
+                    self._fit_umap(features, n_neighbor=n_neighbor, min_dist=min_dist)
+                    logger.info(f"transforming")
+                    embeddings_full = self._transform_umap(features)
+                    embeddings, ground_embeddings = self._separate_ground(embeddings_full)
+                    logger.info(f"plotting")
+                    self.plot(embeddings, ground_embeddings, n_neighbor=n_neighbor, min_dist=min_dist, i_repeat=i_repeat)
 
     def _fit_umap(self, features: torch.TensorType, n_neighbor: int, min_dist: float):
         self.reducer = umap.UMAP(n_neighbors=n_neighbor, min_dist=min_dist, low_memory=True)
@@ -337,16 +336,16 @@ class Worker(Cachable):
 
         return torch.concat(features_cumulative)
 
-    def plot(self, embeddings, ground_embeddings, n_neighbor, min_dist):
+    def plot(self, embeddings, ground_embeddings, n_neighbor, min_dist, i_repeat):
         plt.gca().set_aspect('equal', 'datalim')
         plt.legend(fontsize=14, markerscale=2, facecolor='w')
 
         plt.title(
             f"UMAP projection of {len(self.dataset_instances.keys())} datasets, using '{self.ground_dataset_name}' as the ground dataset - number of neighbours:{n_neighbor}, min distance:{min_dist}", fontsize=15)
 
-        self._plot(embeddings, ground_embeddings, self.dataset_instances, self.ground_dataset_name, n_neighbor, min_dist)
+        self._plot(embeddings, ground_embeddings, self.dataset_instances, self.ground_dataset_name, n_neighbor, min_dist, i_repeat)
 
-    def _plot(self, embeddings, ground_embeddings, dataset, ground_dataset, n_neighbor, min_dist):
+    def _plot(self, embeddings, ground_embeddings, dataset, ground_dataset, n_neighbor, min_dist, i_repeat):
         dataset_names = []
         subsets = []
         for dataset_name in dataset.keys():
@@ -375,7 +374,7 @@ class Worker(Cachable):
 
         sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="subset", alpha=0.85)
         plt.tight_layout()
-        plt.savefig(self.log_dir.joinpath(f"{n_neighbor}-{min_dist}.png"))
+        plt.savefig(self.log_dir.joinpath(f"[{i_repeat}]{n_neighbor}-{min_dist}.png"))
         plt.clf()
 
     def _pool(self, pooling: str, output_tok: torch.Tensor, **kwargs):
@@ -407,7 +406,9 @@ def main(cfg: DictConfig) -> None:
     worker = Worker(cfg)
 
     worker.extract_features()
-    worker.fit_transform(n_neighbors=cfg.model.umap_n_neighbors.split(","), min_dists=cfg.model.umap_min_dists.split(","))
+    n_neighbors = [int(item) for item in cfg.model.umap_n_neighbors.split(",")]
+    min_dists = [float(item) for item in cfg.model.umap_min_dists.split(",")]
+    worker.fit_transform(n_neighbors=n_neighbors, min_dists=min_dists, max_repeat=cfg.model.max_repeat)
 
 
 def cli_main(
@@ -421,20 +422,6 @@ def cli_main(
         default="",
         choices=["umap", "mds"],
         help="method(algorithm) of dimensionality reduction",
-    )
-
-    parser.add_argument(
-        "--umap-n-neighbors",
-        type=str,
-        default="",
-        help="number of neighbors for UMAP, seperated by comma",
-    )
-
-    parser.add_argument(
-        "--umap-min-dists",
-        type=str,
-        default="",
-        help="min distances for UMAP, seperated by comma",
     )
 
     parser.add_argument(
@@ -464,6 +451,28 @@ def cli_main(
         type=str,
         default="",
         help="plot on pre-trained model or on fine-tuned models",
+    )
+
+    parser.add_argument(
+        "--max-repeat",
+        type=int,
+        default="",
+        help="maximum num of times to plot with the same configs",
+    )
+
+
+    parser.add_argument(
+        "--umap-n-neighbors",
+        type=str,
+        default="",
+        help="number of neighbors for UMAP, seperated by comma",
+    )
+
+    parser.add_argument(
+        "--umap-min-dists",
+        type=str,
+        default="",
+        help="min distances for UMAP, seperated by comma",
     )
 
     parser.add_argument(
