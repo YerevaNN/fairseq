@@ -407,7 +407,7 @@ def main(cfg: DictConfig) -> None:
     worker = Worker(cfg)
 
     worker.extract_features()
-    worker.fit_transform(n_neighbors=[10, 50, 100], min_dists=[0.0, 0.25, 0.5, 0.99])
+    worker.fit_transform(n_neighbors=cfg.model.umap_n_neighbors.split(","), min_dists=cfg.model.umap_min_dists.split(","))
 
 
 def cli_main(
@@ -421,6 +421,20 @@ def cli_main(
         default="",
         choices=["umap", "mds"],
         help="method(algorithm) of dimensionality reduction",
+    )
+
+    parser.add_argument(
+        "--umap-n-neighbors",
+        type=str,
+        default="",
+        help="number of neighbors for UMAP, seperated by comma",
+    )
+
+    parser.add_argument(
+        "--umap-min-dists",
+        type=str,
+        default="",
+        help="min distances for UMAP, seperated by comma",
     )
 
     parser.add_argument(
