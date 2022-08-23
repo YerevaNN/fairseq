@@ -32,6 +32,7 @@ import seaborn as sns
 import umap
 import pandas as pd
 from fairseq.models.bart import BARTModel
+from tqdm import tqdm
 
 # We need to setup root logger before importing any fairseq libraries.
 logging.basicConfig(
@@ -316,6 +317,7 @@ def plot(embedding, Y, ground_embedding, ground_Y, dataset, ground_dataset, log_
 
     sns.scatterplot(data=df, x="x", y="y", hue="dataset", style="label", alpha=0.85)
     # sns.kdeplot(data=df, x="x", y="y", shade=True, hue="dataset", alpha=0.85)
+    plt.tight_layout()
     plt.savefig(log_save_dir.joinpath(f"{subset}-{n_neighbor}-{min_dist}.png"))
     plt.clf()
 
@@ -443,7 +445,7 @@ def train(
         trainDatasets = []
         trXs = []
         trYs = []
-        for dataset, checkpoint in zip(datasets, checkpoints):
+        for dataset, checkpoint in tqdm(zip(datasets, checkpoints), total=len(datasets)):
             dataset_name = dataset.rstrip("/").split("/")[-2].lower()
             print(f"dataset {dataset_name}")
             cfg.model.data = dataset
@@ -453,21 +455,25 @@ def train(
             cfg.model.restore_file = checkpoint
 
             sub_task = tasks.setup_task(cfg.task)
-            model = sub_task.build_model(cfg.model)
-            criterion = sub_task.build_criterion(cfg.criterion)
             sub_trainer = Trainer(cfg, sub_task, kwargs["model"], kwargs["criterion"], kwargs["quantizer"])
 
             # val
             for valid_sub_split in cfg.dataset.valid_subset.split(","):
                 sub_task.load_dataset(valid_sub_split, combine=False, epoch=1)
             itr_valid = sub_trainer.get_valid_iterator("valid").next_epoch_itr(shuffle=False, set_dataset_epoch=False)
-            vaX, vaY = extract_features(itr_valid, trainer.model, cfg.model.pool)
+            if cfg.model.plot_policy == "pretrained":
+                model = trainer.model
+            elif cfg.model.plot_policy == "finetuned":
+                model = sub_task.build_model(cfg.model)
+            model = model.to(torch.cuda.current_device())
+
+            vaX, vaY = extract_features(itr_valid, model, cfg.model.pool)
             vaX = vaX.cpu()
             vaY = vaY.cpu()
 
             if dataset_name == ground_dataset:
-                assert valGroundX not in locals()
-                assert valGroundY not in locals()
+                assert "valGroundX" not in locals()
+                assert "valGroundY" not in locals()
                 valGroundX = vaX
                 valGroundY = vaY
             else:
@@ -481,7 +487,7 @@ def train(
             )
             itr_train = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
                 epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
-            trX, trY = extract_features(itr_train, trainer.model, cfg.model.pool)
+            trX, trY = extract_features(itr_train, model, cfg.model.pool)
             print("------------------------------------------")
             print(f"{checkpoint} has dim: {trX.shape}")
             print("\n")
@@ -489,8 +495,8 @@ def train(
             trY = trY.cpu()
 
             if dataset_name == ground_dataset:
-                assert trainGroundX not in locals()
-                assert trainGroundY not in locals()
+                assert "trainGroundX" not in locals()
+                assert "trainGroundY" not in locals()
                 trainGroundX = trX
                 trainGroundY = trY
             else:
@@ -570,6 +576,13 @@ def cli_main(
         type=str,
         default="",
         help="the name of the dataset for which to plot the contoures (pre-training dataset)",
+    )
+
+    parser.add_argument(
+        "--plot-policy",
+        type=str,
+        default="",
+        help="plot on pre-trained model or on fine-tuned models",
     )
 
     args = options.parse_args_and_arch(parser, modify_parser=modify_parser)

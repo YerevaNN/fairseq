@@ -1,5 +1,8 @@
 #!/usr/bin/env python3 -u
+from fairseq import utils
+import torch.nn.functional as F
 import os
+from fairseq.criterions.cross_entropy import CrossEntropyCriterion
 from fairseq.trainer import Trainer
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.logging import meters, metrics
@@ -10,7 +13,7 @@ from fairseq.dataclass.utils import convert_namespace_to_omegaconf
 from fairseq.dataclass.initialize import add_defaults
 from fairseq.dataclass.configs import FairseqConfig
 from fairseq.data.plasma_utils import PlasmaStore
-from fairseq.data import data_utils, iterators
+from fairseq.data import data_utils
 from fairseq import checkpoint_utils, options, quantization_utils, tasks, utils
 from omegaconf import DictConfig, OmegaConf
 import torch
@@ -21,13 +24,18 @@ import math
 import os
 import sys
 from typing import Callable, List, Optional, Tuple
-
-from sklearn.linear_model import LogisticRegression
+import json
 from collections import OrderedDict
 from matplotlib import pyplot as plt
-from sklearn import metrics as metrics_skl
-from sklearn.metrics import roc_auc_score
 from pathlib import Path
+
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import umap
+import pandas as pd
+from fairseq.models.bart import BARTModel
+from tqdm import tqdm
 
 # We need to setup root logger before importing any fairseq libraries.
 logging.basicConfig(
@@ -148,6 +156,12 @@ def main(cfg: FairseqConfig) -> None:
         trainer = Trainer(cfg, task, model, criterion, quantizer)
     else:
         trainer = MegatronTrainer(cfg, task, model, criterion)
+
+    datasets = cfg.model.umap_datasets.split(",")
+    checkpoints = cfg.model.umap_checkpoints.split(",")
+
+    assert len(datasets) == len(checkpoints)
+
     logger.info(
         "training on {} devices (GPUs/TPUs)".format(
             cfg.distributed_training.distributed_world_size
@@ -189,7 +203,8 @@ def main(cfg: FairseqConfig) -> None:
             break
 
         # train for one epoch
-        valid_losses, should_stop = train(cfg, trainer, task, epoch_itr)
+        valid_losses, should_stop = train(cfg, trainer, task, epoch_itr, datasets, checkpoints,
+                                          model=model, criterion=criterion, quantizer=quantizer)
         if should_stop:
             break
 
@@ -216,51 +231,6 @@ def main(cfg: FairseqConfig) -> None:
         logger.info("ioPath PathManager finished waiting.")
 
 
-def init_reg_cv(trX, trY, vaX, vaY, penalty='l1',
-                C=2**np.arange(-8, 1).astype(np.float), seed=42):
-    """
-    trX: [n_samples, n_units]
-    trY: [n_samples, 1]
-    """
-    # finding the best 'c'
-    # trX = trX.cpu().numpy()
-    # trY = trY.cpu().numpy().ravel()
-    # vaX = vaX.cpu().numpy()
-    # vaY = vaY.cpu().numpy().ravel()
-
-    # scores = []
-    # for i, c in enumerate(C):
-    #     model = LogisticRegression(solver="liblinear", C=c, penalty=penalty, random_state=seed+i)
-    #     model.fit(trX, trY)
-    #     score = model.score(vaX, vaY)
-    #     scores.append(score)
-    # c = C[np.argmax(scores)]
-
-    return [LogisticRegression(solver="liblinear", C=c, penalty=penalty, random_state=seed+len(C)) for c in C]
-
-
-def train_with_reg_cv(model, trX, trY, penalty='l1', seed=42):
-    """
-    trX: [n_samples, n_units]
-    trY: [n_samples, 1]
-    """
-    trX = trX.cpu().numpy()
-    trY = trY.cpu().numpy().ravel()
-
-    model.fit(trX, trY)
-    nnotzero = np.sum(model.coef_ != 0)
-    nonzero_positions = np.nonzero(np.squeeze(model.coef_, 0))[0]
-
-    return nnotzero, nonzero_positions
-
-
-def score(model, vaX, vaY):
-    vaX = vaX.cpu().numpy()
-    vaY = vaY.cpu().numpy().ravel()
-
-    return model.score(vaX, vaY)*100., roc_auc_score(vaY, model.predict_proba(vaX)[:, 1])*100
-
-
 def move_to(obj, device):
     if torch.is_tensor(obj):
         return obj.to(device)
@@ -283,6 +253,8 @@ def move_to(obj, device):
         return obj
 
 
+# pooling: last
+# pooling: take the "important' features
 def pool(pooling: str, output_tok: torch.Tensor, **kwargs):
     if pooling == "avg":
         return torch.mean(output_tok, dim=1)
@@ -305,111 +277,102 @@ def pool(pooling: str, output_tok: torch.Tensor, **kwargs):
         raise NotImplemented(f"pooling method '{pooling}' is not implemented")
 
 
-def extract_features(itr, trainer, pooling, num_search_batches=-1):
-    subsetX_list = []
-    subsetY_list = []
-    for i, sample in enumerate(itr):
-        if num_search_batches > -1 and i >= num_search_batches:
-            break
-        # for sample in samples:
-        subsetX_sample = move_to(sample['net_input'], device)
-        subsetY_sample = move_to(sample['target'], device)
-
-        with torch.no_grad():
-            output_tok, _ = trainer.model(**subsetX_sample)
-            output = pool(pooling, output_tok, input_tok=subsetX_sample)
-        subsetX_list.append(output)
-        subsetY_list.append(subsetY_sample)
-
-    subsetX = torch.concat(subsetX_list, dim=0)
-    subsetY = torch.concat(subsetY_list, dim=0)
-
-    return subsetX, subsetY
+def compute_loss(model, net_output, sample, padding_idx):
+    lprobs = model.get_normalized_probs(net_output, log_probs=True)
+    lprobs = lprobs.view(-1, lprobs.size(-1))
+    target = sample["prev_output_tokens"].view(-1)
+    loss = F.nll_loss(
+        lprobs,
+        target,
+        ignore_index=padding_idx,
+        reduction="mean",
+    )
+    return loss
 
 
-def plot_mlot(reg_model, nnotzero, nonzero_positions, acc, roc_auc, trX, trY, vaX, vaY, model_path, data_path, pooling):
-    print("****************************************")
-    print(f"   {reg_model.C} - C")
-    print(f"   {nnotzero} - features used")
-    print(f"   {list(nonzero_positions)} - features indices used")
-    print(f"   {acc} - val accuracy")
-    print(f"   {roc_auc} - val roc_auc")
-    print("****************************************")
+def calc_ppl(itr, subset, dataset_name, model, padding_idx, log_dir, num_search_batches=-1):
+    save_dir = log_dir.joinpath(subset)
+    os.makedirs(save_dir, exist_ok=True)
+    logging_output = {
+        "loss": [],
+        "ppl": []
+    }
 
-    data_path = data_path.rstrip("/").lstrip("/").split("/")[-2]
-    model_path = ".".join(model_path.rstrip("/").lstrip("/").split("/")[-2:])
+    with torch.no_grad():
+        for i, sample in tqdm(enumerate(itr)):
+            if i % 100 == 0:
+                if num_search_batches > -1 and i >= num_search_batches:
+                    break
+                sample = move_to(sample['net_input'], device)
 
-    log_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}")
-    log_save_dir.mkdir(parents=True, exist_ok=True)
+                net_output = model(**sample)
+                loss = compute_loss(model, net_output, sample, padding_idx)
 
-    dist_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}/dist")
-    dist_save_dir.mkdir(parents=True, exist_ok=True)
+                logging_output["loss"].append(float(loss.data))
+                logging_output["ppl"].append(utils.get_perplexity(loss))
 
-    auc_roc_save_dir = Path(f"./un-logs/{pooling}/{data_path}/{model_path}/auc_roc")
-    auc_roc_save_dir.mkdir(parents=True, exist_ok=True)
-
-    logs = [f"{reg_model.C} - C", f"{nnotzero} - features used",
-            f"{list(nonzero_positions)} - features indices used",
-            f"{acc} - val accuracy", f"{roc_auc} - val roc_auc"]
-
-    with open(log_save_dir.joinpath(f"{reg_model.C}.log.txt"), "w") as f:
-        for log in logs:
-            f.write(log)
-            f.write("\n")
-
-    # visualize sentiment unit
-    trX_plot = trX.cpu().numpy()
-    trY_plot = trY.cpu().numpy().ravel()
-    sentiment_unit = trX_plot[:, 1000]
-    plt.hist(sentiment_unit[trY_plot == 0], bins=25, alpha=0.5, label='neg')
-    plt.hist(sentiment_unit[trY_plot == 1], bins=25, alpha=0.5, label='pos')
-    plt.legend()
-    plt.savefig(dist_save_dir.joinpath(f"{reg_model.C}.png"))
-    plt.clf()
-
-    vaX_plot = vaX.cpu().numpy()
-    vaY_plot = vaY.cpu().numpy().ravel()
-    metrics_skl.plot_roc_curve(reg_model, vaX_plot, vaY_plot)
-    plt.savefig(auc_roc_save_dir.joinpath(f"{reg_model.C}.png"))
-    plt.clf()
+    with open(save_dir.joinpath(f"{dataset_name}.jsonl"), "w") as f:
+        logging_dump = {
+            "loss": np.mean(logging_output['loss']),
+            "ppl": np.mean(logging_output['ppl'])
+        }
+        json.dump(logging_dump, f)
 
 
 @metrics.aggregate("train")
 def train(
-    cfg: DictConfig, trainer: Trainer, task: tasks.FairseqTask, epoch_itr
+    cfg: DictConfig, trainer: Trainer, task: tasks.FairseqTask, epoch_itr, datasets, checkpoints, **kwargs
 ) -> Tuple[List[Optional[float]], bool]:
+    # bart.model
     """Train the model for one epoch and return validation losses."""
     trainer.model.eval()
 
-    # val
-    itr_valid = trainer.get_valid_iterator("valid").next_epoch_itr(shuffle=False, set_dataset_epoch=False)
-    vaX, vaY = extract_features(itr_valid, trainer, cfg.model.pool)
+    ground_dataset = cfg.model.ground_dataset
+    # trivial caching
+    dir_name = "-".join([dataset.rstrip("/").split("/")[-2].lower() for dataset in datasets])
+    save_dir = Path("ppl_multi").joinpath(dir_name)
+    os.makedirs(save_dir, exist_ok=True)
 
-    # search
-    itr_train_search = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
-        epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
-    num_search_batches = 3
-    trX_search, trY_search = extract_features(itr_train_search, trainer, cfg.model.pool, num_search_batches)
+    for dataset, checkpoint in tqdm(zip(datasets, checkpoints), total=len(datasets)):
+        dataset_name = dataset.rstrip("/").split("/")[-2].lower()
+        print(f"dataset {dataset_name}")
 
-    reg_models = init_reg_cv(trX_search, trY_search, vaX, vaY)
+        cfg.model.data = dataset
+        cfg.task.data = dataset
+        cfg.data = dataset
+        cfg.checkpoint.restore_file = checkpoint
+        cfg.model.restore_file = checkpoint
 
-    # train
-    itr_train = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
-        epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
-    trX, trY = extract_features(itr_train, trainer, cfg.model.pool)
+        sub_task = tasks.setup_task(cfg.task)
+        # model = sub_task.build_model(cfg.model)
+        # criterion = sub_task.build_criterion(cfg.criterion)
+        sub_trainer = Trainer(cfg, sub_task, kwargs["model"], kwargs["criterion"], kwargs["quantizer"])
 
-    for reg_model in reg_models:
-        nnotzero, nonzero_positions = train_with_reg_cv(reg_model, trX, trY)
-        acc, roc_auc = score(reg_model, vaX, vaY)
+        # val
+        for valid_sub_split in cfg.dataset.valid_subset.split(","):
+            sub_task.load_dataset(valid_sub_split, combine=False, epoch=1)
+        itr_valid = sub_trainer.get_valid_iterator("valid").next_epoch_itr(shuffle=False, set_dataset_epoch=False)
+        calc_ppl(itr_valid, "valid", dataset_name, trainer.model, task.dictionary.pad(), save_dir)
 
-        plot_mlot(reg_model, nnotzero, nonzero_positions, acc, roc_auc, trX,
-                  trY, vaX, vaY, cfg.model.restore_file, cfg.model.data, cfg.model.pool)
+        # train
+        epoch_itr = sub_trainer.get_train_iterator(
+            epoch=1, load_dataset=True, disable_iterator_cache=sub_task.has_sharded_data("train")
+        )
+        itr_train = epoch_itr.next_epoch_itr(fix_batches_to_gpus=cfg.distributed_training.fix_batches_to_gpus, shuffle=(
+            epoch_itr.next_epoch_idx > cfg.dataset.curriculum))
+        calc_ppl(itr_train, "train", dataset_name, trainer.model, task.dictionary.pad(), save_dir)
+
+        del sub_trainer
+        del sub_task
+        del epoch_itr
 
     return
 
 
 def cli_main(
     modify_parser: Optional[Callable[[argparse.ArgumentParser], None]] = None
+
+
 ) -> None:
     parser = options.get_training_parser()
     parser.add_argument(
@@ -418,6 +381,36 @@ def cli_main(
         default="avg",
         help="Method of representing a sentence via tokens",
     )
+
+    parser.add_argument(
+        "--umap-fit-policy",
+        type=str,
+        default="grouped",
+        choices=["grouped", "seperate"],
+        help="Method of fitting the umap. grouped: fits all the embs concatenated. seperate: fits each dataset emb seperatly",
+    )
+
+    parser.add_argument(
+        "--umap-datasets",
+        type=str,
+        default="",
+        help="list of datasets to plot on, comma seperate",
+    )
+
+    parser.add_argument(
+        "--umap-checkpoints",
+        type=str,
+        default="",
+        help="list of checkpoints of each dataset, comma seperate",
+    )
+
+    parser.add_argument(
+        "--ground-dataset",
+        type=str,
+        default="",
+        help="the name of the dataset for which to plot the contoures (pre-training dataset)",
+    )
+
     args = options.parse_args_and_arch(parser, modify_parser=modify_parser)
 
     cfg = convert_namespace_to_omegaconf(args)
@@ -434,9 +427,6 @@ def cli_main(
                 distributed_utils.call_main(cfg, main)
     else:
         distributed_utils.call_main(cfg, main)
-
-    # if cfg.common.use_plasma_view:
-    #     server.server.kill()
 
 
 if __name__ == "__main__":
