@@ -1263,7 +1263,8 @@
         "k_fold": 10
     },
 
-    "Ames_0-fold": {
+
+    "MNInVitro": {
         "type": "classification",
         "filter": false,
         "class_index": [
@@ -1271,61 +1272,74 @@
         ],
         "smiles_index": -2,
         "split_type": "random",
+        "score": "AUC",
+        "label_col_name": "label",
+        "smiles_col_name": "SMILES"
+    },
+
+    "Ames_0-fold": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -2
+        ],
+        "smiles_index": -1,
+        "split_type": "random",
         "score": "rmse",
-        "label_col_name": "Activity",
-        "smiles_col_name": "Canonical_Smiles",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
         "k_fold": 10
     },
     "Ames_1-fold": {
         "type": "classification",
         "filter": false,
         "class_index": [
-            -1
+            -2
         ],
-        "smiles_index": -2,
+        "smiles_index": -1,
         "split_type": "random",
         "score": "rmse",
-        "label_col_name": "Activity",
-        "smiles_col_name": "Canonical_Smiles",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
         "k_fold": 10
     },
     "Ames_2-fold": {
         "type": "classification",
         "filter": false,
         "class_index": [
-            -1
+            -2
         ],
-        "smiles_index": -2,
+        "smiles_index": -1,
         "split_type": "random",
         "score": "rmse",
-        "label_col_name": "Activity",
-        "smiles_col_name": "Canonical_Smiles",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
         "k_fold": 10
     },
     "Ames_3-fold": {
         "type": "classification",
         "filter": false,
         "class_index": [
-            -1
+            -2
         ],
-        "smiles_index": -2,
+        "smiles_index": -1,
         "split_type": "random",
         "score": "rmse",
-        "label_col_name": "Activity",
-        "smiles_col_name": "Canonical_Smiles",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
         "k_fold": 10
     },
     "Ames_4-fold": {
         "type": "classification",
         "filter": false,
         "class_index": [
-            -1
+            -2
         ],
-        "smiles_index": -2,
+        "smiles_index": -1,
         "split_type": "random",
         "score": "rmse",
-        "label_col_name": "Activity",
-        "smiles_col_name": "Canonical_Smiles",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
         "k_fold": 10
     },
     
@@ -9732,5 +9746,4054 @@
         "filter": false,
         "split_type": "random",
         "score": "prc-auc"
+    },
+
+    "B_0": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_1": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_2": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_3": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_4": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_5": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_6": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_7": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_8": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_9": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_10": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_11": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_12": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_13": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_14": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_15": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_16": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_17": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_18": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_19": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_20": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_21": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_22": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_23": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_24": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_25": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_26": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_27": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_28": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_29": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_30": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_31": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_32": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_33": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_34": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_35": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_36": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_37": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_38": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_39": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_40": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_41": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_42": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_43": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_44": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_45": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_46": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_47": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_48": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_49": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_50": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_51": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_52": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_53": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_54": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_55": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_56": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_57": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_58": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_59": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_60": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_61": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_62": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_63": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_64": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_65": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_66": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_67": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_68": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_69": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_70": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_71": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_72": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_73": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_74": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_75": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_76": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_77": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_78": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_79": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_80": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_81": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_82": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_83": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_84": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_85": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_86": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_87": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_88": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_89": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_90": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_91": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_92": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_93": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_94": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_95": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_96": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_97": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_98": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_99": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_100": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_101": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_102": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_103": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_104": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_105": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_106": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_107": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_108": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_109": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_110": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_111": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_112": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_113": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_114": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_115": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_116": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_117": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_118": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_119": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_120": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_121": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_122": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_123": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_124": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_125": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_126": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_127": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_128": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_129": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_130": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_131": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_132": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_133": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_134": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_135": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_136": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_137": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_138": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_139": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_140": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_141": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_142": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_143": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_144": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_145": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_146": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_147": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_148": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_149": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_150": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_151": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_152": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_153": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_154": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_155": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_156": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_157": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_158": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_159": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_160": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_161": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_162": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_163": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_164": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_165": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_166": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_167": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_168": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_169": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_170": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_171": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_172": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_173": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_174": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_175": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_176": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_177": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_178": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_179": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_180": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_181": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_182": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_183": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_184": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_185": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_186": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_187": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_188": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_189": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_190": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_191": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_192": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_193": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_194": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_195": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_196": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_197": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_198": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_199": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_200": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_201": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_202": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_203": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_204": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_205": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_206": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_207": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_208": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_209": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_210": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_211": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_212": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_213": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_214": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_215": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_216": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_217": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_218": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_219": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_220": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_221": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_222": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_223": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_224": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_225": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_226": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_227": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_228": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_229": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_230": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_231": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_232": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_233": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_234": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_235": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_236": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_237": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_238": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_239": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_240": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_241": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_242": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_243": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_244": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_245": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_246": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_247": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_248": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_249": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_250": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_251": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_252": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_253": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_254": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_255": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_256": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_257": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_258": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_259": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_260": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_261": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_262": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_263": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_264": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_265": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_266": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_267": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_268": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_269": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_270": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_271": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_272": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_273": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_274": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_275": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_276": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_277": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_278": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_279": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_280": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_281": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_282": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_283": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_284": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_285": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_286": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_287": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_288": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_289": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_290": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_291": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_292": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_293": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_294": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_295": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_296": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_297": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_298": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_299": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_300": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_301": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_302": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_303": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_304": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_305": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_306": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_307": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_308": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_309": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_310": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_311": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_312": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_313": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_314": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_315": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_316": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_317": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_318": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_319": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_320": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_321": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_322": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_323": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_324": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_325": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_326": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_327": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_328": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_329": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_330": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_331": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_332": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_333": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_334": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_335": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_336": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_337": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_338": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_339": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_340": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_341": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_342": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_343": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_344": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_345": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_346": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_347": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_348": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_349": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_350": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_351": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_352": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_353": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_354": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_355": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_356": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_357": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_358": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_359": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_360": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_361": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_362": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_363": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_364": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_365": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_366": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
+    },
+    "B_367": {
+        "load_name": "bace_classification",
+        "type": "classification",
+        "class_index": [
+        -2
+        ],
+        "smiles_index": -1,
+        "filter": true,
+        "split_type": "scaffold",
+        "score": "roc-auc"
     }
 }

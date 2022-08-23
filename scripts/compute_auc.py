@@ -81,7 +81,7 @@ drout = args.dropout
 noise_params = f"_noise_type_{noise_type}_r3f_lambda_{r3f_lambda}" if noise_type in ["uniform", "normal"] else ""
 
 chkpt_path = f"/mnt/good/gayane/data/chkpt/{dataset}_bs_16_dropout_{drout}_lr_{lr}_totalNum_{totNumUpdate}_warmup_{warmup}{noise_params}/{args.checkpoint_name}"
-# chkpt_path = "/mnt/good/gayane/data/chkpt/BACE_bs_16_dropout_0.3_lr_1e-5_totalNum_757_warmup_121_noise_type_normal_r3f_lambda_0.5/checkpoint_best.pt"
+# chkpt_path = "/mnt/good/gayane/data/chkpt/BBBP_bs_16_dropout_0.1_lr_3e-5_totalNum_1020_warmup_163_noise_type_uniform_r3f_lambda_1.0/checkpoint_best.pt"
 print(chkpt_path)  # BACE_bs_16_lr_3e-5_totalNum_1135_warmup_181/ in test 
 bart = BARTModel.from_pretrained(model,  checkpoint_file = chkpt_path, 
                                  bpe="sentencepiece",
@@ -152,7 +152,7 @@ else:
     d = {"SMILES": sm, "prediction": y_pred , "y_true": y }
     df = pd.DataFrame(d) 
     df = df.dropna()
-    df.to_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{args.dataset_name}/{args.dataset_name}_valid.csv")     
+    df.to_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{args.dataset_name}/{args.dataset_name}_test_.csv")     
 
 if task_type == 'classification':
     if len(dataset_js["class_index"]) >1:

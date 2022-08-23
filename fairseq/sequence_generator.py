@@ -677,7 +677,7 @@ class SequenceGenerator(nn.Module):
 
         if self.match_source_len:
             condition = step > torch.index_select(src_lengths, 0, unfin_idx)
-            eos_scores = torch.where(condition, torch.tensor(-math.inf), eos_scores)
+            eos_scores = torch.where(condition, torch.tensor(-math.inf).to(condition.device), eos_scores)
         sent_list: List[int] = sent.tolist()
         for i in range(bbsz_idx.size()[0]):
             # An input sentence (among those in a batch) is finished when

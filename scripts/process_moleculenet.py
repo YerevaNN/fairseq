@@ -55,26 +55,31 @@ elif  args.dataset_name == "classAcuteOralToxicity":
     df = process.classAcuteOralToxicity(args.dataset_name, path)
 
 
-elif args.dataset_name == "Genotoxicity" :
+elif args.dataset_name == "Genotoxicity":
     df = process.genotoxicity(args.dataset_name, path)
 
-elif args.dataset_name == "japan" :
+elif args.dataset_name == "japan":
     df = process.japan(args.dataset_name, path) 
 
-elif args.dataset_name == "snyder_negatives_451" :
+elif args.dataset_name == "snyder_negatives_451":
     df = process.snyder_negatives_451(args.dataset_name, path)   
     
-elif args.dataset_name == "Ames" :
+elif args.dataset_name == "Ames":
     df = process.ames(args.dataset_name, path, dataset["smiles_col_name"], dataset['label_col_name'])
 
-elif args.dataset_name == "ZINC" :
+elif args.dataset_name == "ZINC":
     train_df, valid_df, test_df = process.ZINC(args.dataset_name, path)
 
-elif args.dataset_name == "BBBP-balanced" :
+elif args.dataset_name == "BBBP-balanced":
     test_df = pd.read_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/test_{args.dataset_name}.csv")
     train_df = pd.read_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/train_{args.dataset_name}.csv")
     valid_df = pd.read_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/valid_{args.dataset_name}.csv")
-    
+
+elif args.dataset_name.startswith("B_"):
+    train_df = process.scaff(args.dataset_name, "train")
+    valid_df = train_df
+    test_df = valid_df
+
 else:
     # For MoleculeNet data
     
@@ -125,23 +130,24 @@ else:
 
 if (args.dataset_name=="japan" or args.dataset_name=="snyder_negatives_451"
     or args.dataset_name == "Ames" or args.dataset_name == "classAcuteOralToxicity" 
-    or args.dataset_name == "regAcuteOralToxicity"
-        or args.dataset_name == "Genotoxicity" ) :
+    or args.dataset_name == "regAcuteOralToxicity"):
     label_col_name = dataset["label_col_name"]
     smiles_col_name = dataset['smiles_col_name']
     
     train_df, valid_df, test_df = process.split_train_val_test(df, dataset['smiles_col_name'], dataset['label_col_name'])
+if args.dataset_name == "Genotoxicity":
+    list_df, test_df = process.cross_val(df,  dataset['smiles_col_name'], dataset['label_col_name'], k_fold=5)
 if len(dataset["class_index"]) >1:
     print("___________________")
     for i in range(len(dataset["class_index"])):
         test_df.to_csv(f"{store_path}/{args.dataset_name}_{i}/{args.dataset_name}/test_{args.dataset_name}.csv")
         train_df.to_csv(f"{store_path}/{args.dataset_name}_{i}/{args.dataset_name}/train_{args.dataset_name}.csv")
         valid_df.to_csv(f"{store_path}/{args.dataset_name}_{i}/{args.dataset_name}/valid_{args.dataset_name}.csv")
-else:
+# else:
 
-    test_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/test_{args.dataset_name}.csv")
-    train_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/train_{args.dataset_name}.csv")
-    valid_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/valid_{args.dataset_name}.csv")
+    # test_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/test_{args.dataset_name}.csv")
+    # train_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/train_{args.dataset_name}.csv")
+    # valid_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/valid_{args.dataset_name}.csv")
 
 
 loc = valid_df.columns.get_loc
