@@ -1,4 +1,3 @@
-import imp
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
@@ -239,7 +238,7 @@ def cross_val(df, smiles_col_name, label_col_name, k_fold):
     y_train = pd.DataFrame({'ind':df['Classification'].index, label_col_name: df['Classification'].values})
 
 
-    kf = KFold(n_splits=k_fold, shuffle=True).split(x_train, y_train)
+    kf = KFold(n_splits=k_fold, shuffle=True, random_state=42).split(x_train, y_train)
     kf_data = list()
     for train_index, val_index in kf:
         X_train_, X_val_ = x_train.iloc[train_index], x_train.iloc[val_index]
@@ -270,12 +269,22 @@ def Ames_10_times():
     df_cv = ames("Ames_train", path, smiles_col_name, label_col_name)
     df_ext = ames("Ames_external", path, smiles_col_name, label_col_name)
 
+def read_file(ind_path):
+
+    ind_list = []
+    with open(ind_path, "r") as f:
+        reader = csv.reader(f, delimiter="\t")
+        for i, line in enumerate(reader):
+            ind_list.append(np.array(list(map(int, line[0].split(","))))-1)
+    return ind_list
+
 
 def Ames():
-    dataset_name = 'Ames'
+    dataset_name = 'Ames_fingerprint'
     store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
     path = f"{store_path}/{dataset_name}/{dataset_name}/"
     inp = "/home/gayane/BartLM"
+    dataset_name = "Ames_"
 
 
     with open('/home/gayane/BartLM/fairseq/scripts/datasets.json') as f:
@@ -283,35 +292,22 @@ def Ames():
 
     dataset = datasets_json[dataset_name]
     si = dataset['smiles_index']
-    smiles_col_name, label_col_name = dataset["smiles_col_name"], dataset['label_col_name']
+    fpi = dataset['fp_index']
+    smiles_col_name, label_col_name, fp_col_name = dataset["smiles_col_name"], dataset['label_col_name'], dataset['fp_col_name']
+    
+    dataset_name = "Ames"
+    # df = ames(dataset_name, path, smiles_col_name, label_col_name)
 
-    df = ames(dataset_name, path, smiles_col_name, label_col_name)
-
-
-    stat_train = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames/Ames/splits_train_N6512.csv"
-    train_ind_list = []
-    with open(stat_train, "r") as f:
-        reader = csv.reader(f, delimiter="\t")
-        for i, line in enumerate(reader):
-            train_ind_list.append(list(map(int, line[0].split(","))))
-
+    df = pd.read_csv("/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames_fingerprint/Ames_train.csv")
 
     stat_train = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames/Ames/splits_train_N6512.csv"
-    train_ind_list = []
-    with open(stat_train, "r") as f:
-        reader = csv.reader(f, delimiter="\t")
-        for i, line in enumerate(reader):
-            train_ind_list.append(np.array(list(map(int, line[0].split(","))))-1)
-
+    train_ind_list = read_file(stat_train)
 
     _valid = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames/Ames/splits_test_N6512.csv"
-    valid_ind_list = []
-    with open(_valid, "r") as f:
-        reader = csv.reader(f, delimiter="\t")
-        for i, line in enumerate(reader):
-            valid_ind_list.append(np.array(list(map(int, line[0].split(","))))-1)
+    valid_ind_list = read_file(_valid)
 
-    test_df = pd.read_csv("/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames_0-fold/Ames_0-fold/test_Ames.txt")
+    test_df = pd.read_csv("/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames_fingerprint/Ames_external.csv")
+    
     cv_train_valid_ind_list = []
     for i in range(len(valid_ind_list)):
         test_ind = valid_ind_list[i]
@@ -335,12 +331,16 @@ def Ames():
         smiles_train = list(map(str, train_df.iloc[:, si].tolist()))
         smiles_val = list(map(str, valid_df.iloc[:, si].tolist()))
         smiles_test = list(map(str, test_df.iloc[:, si].tolist()))
+        fp_train = list(map(str, train_df.iloc[:, fpi].tolist()))
+        fp_val = list(map(str, valid_df.iloc[:, fpi].tolist()))
+        fp_test = list(map(str, test_df.iloc[:, fpi].tolist()))
 
         os.system(f"mkdir -p {path}/raw")
         os.system(f"mkdir -p {path}/tokenized")
         os.system(f"mkdir -p {path}/processed")
         os.system(f'mkdir -p {path}/processed/label')
         os.system(f'mkdir -p {path}/processed/input0')
+        os.system(f'mkdir -p {path}/processed/input1')
         with open(f"{path}/processed/label/train.label", "w") as f:
             for item in class_train:
                 f.write("%s\n" % item)
@@ -357,20 +357,33 @@ def Ames():
 
         names = ["train", "valid", "test"]
         X_splits = []
+        FP_splits = []
         y_splits = []
 
 
         # Write Raw Splits
-        print("Writing Input Splits")
+        print("Writing Input0 Splits")
         
         for name, smiles in zip(names, (smiles_train, smiles_val, smiles_test)):
             print(name + ".target")
             print(dataset_i )
-            new_path = f"{path}/raw/" + name + ".input" 
+            new_path = f"{path}/raw/" + name + ".input0" 
             X_splits.append(new_path)
             with open(new_path, "w+") as f:
                 for smile in smiles:
                     f.write(f"{smile}\n")
+
+        print("Writing Input1 Splits")
+        
+        for name, fps in zip(names, (fp_train, fp_val, fp_test)):
+            print(name + ".target")
+            print(dataset_i )
+            new_path = f"{path}/raw/" + name + ".input1" 
+            FP_splits.append(new_path)
+            with open(new_path, "w+") as f:
+                for fp in fps:
+                    f.write(f"{fp}\n")
+        
         print("Writing Output Splits")
         
         for name, targets in zip(names, (class_train, class_val, class_test)):
@@ -397,6 +410,27 @@ def Ames():
 
         X_splits = splits
 
+        splits = []
+        for path_ in FP_splits:
+            cur_path = path_.replace('raw', 'tokenized')
+            print(path_)
+            print(cur_path)
+            splits.append(cur_path)
+            cmd = f"python {inp}/fairseq/scripts/spm_parallel.py --input {path_} --outputs {cur_path} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+            print(cmd)
+            os.system(cmd)
+
+        FP_splits = splits
+
+
+
+        os.system(('fairseq-preprocess --only-source '
+                f'--trainpref "{FP_splits[0]}" '
+                f'--validpref "{FP_splits[1]}" '
+                f'--testpref "{FP_splits[2]}" '
+                f'--destdir "{path}/processed/input1" --workers 60 '
+                '--srcdict /home/gayane/BartLM/Bart/chemical/tokenizer/chem.vocab.fs'))
+
         os.system(('fairseq-preprocess --only-source '
                 f'--trainpref "{X_splits[0]}" '
                 f'--validpref "{X_splits[1]}" '
@@ -411,7 +445,7 @@ def Ames():
                 f'--destdir "{path}/processed/label" --workers 60 '))
 
 
-# Ames()
+Ames()
 
 
 
@@ -667,4 +701,4 @@ def MicroNucleose():
                 f'--destdir "{path}/processed/label" --workers 60 '))
 
 
-MicroNucleose()
+# MicroNucleose()

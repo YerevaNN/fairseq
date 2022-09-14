@@ -1,11 +1,11 @@
 from tkinter import N
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
+from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from itertools import chain
 from pathlib import Path
 from rdkit import Chem
 from sklearn import metrics
-from sklearn.manifold import TSNE
 import torch.nn as nn
 from tqdm import tqdm
 import networkx as nx
@@ -47,14 +47,12 @@ def add_edge_to_graph(G, e1, e2):
 
 
 
-dataset_name = 'BACE'
-len_dataset = 1513
+dataset = 'lipo'
 pretrained_model = True
 # dataset = dataset_name if dataset_name in set(["BBBP", "BACE", "HIV"]) else f"{dataset_name}_{args.subtask}"
-dataset = dataset_name
 
-df_filename = f"df_{dataset_name}_pretrained{pretrained_model}.csv"
-np_filename = f"np_{dataset_name}_pretrained{pretrained_model}.npy"
+df_filename = f"/mnt/good/gayane/data/data_load_folder/df_{dataset}_pretrained{pretrained_model}.csv"
+np_filename = f"/mnt/good/gayane/data/data_load_folder/np_{dataset}_pretrained{pretrained_model}.npy"
 
 def generate_df_np():
     from fairseq.data.data_utils import load_indexed_dataset
@@ -66,7 +64,7 @@ def generate_df_np():
     store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
     model = f"{store_path}/{dataset}/processed{pretrained}"
 
-    with open('/home/gayane/BartLM/captum/fairseq/scripts/datasets.json') as f:
+    with open('/home/gayane/BartLM/fairseq/scripts/datasets.json') as f:
         datasets_json = json.load(f)
     dataset_js = datasets_json[dataset]
     task_type = dataset_js['type']
@@ -80,9 +78,9 @@ def generate_df_np():
     os.system(f"mkdir -p {store_path}/{dataset}/processed/input0/")
     os.system(f"mkdir -p {store_path}/{dataset}/processed/label/")
 
-    warmup = 163
-    totNumUpdate = 1020
-    lr = '3e-5'
+    # warmup = 163
+    # totNumUpdate = 1020
+    # lr = '3e-5'
     # chkpt_path = '/mnt/good/gayane/data/chkpt/BBBP_bs_16_dropout_0.1_lr_3e-5_totalNum_1020_warmup_163_noise_type_uniform_r3f_lambda_1.0/checkpoint_best.pt'
     chkpt_path = '/home/gayane/BartLM/checkpoints/checkpoint_last.pt'
     # chkpt_path = f"/mnt/good/gayane/data/chkpt/{dataset}_bs_16_lr_{lr}_totalNum_{totNumUpdate}_warmup_{warmup}/checkpoint_last.pt"
@@ -154,16 +152,62 @@ def generate_df_np():
     sm_valid, targets_valid = get_data("valid") # , y_pred_valid
     sm_test, targets_test = get_data("test") # , y_pred_test
 
+
+    # sm_train = get_data("train")
+
     # y_pred_train = pd.DataFrame({"y_pred":y_pred_train})
     # y_pred_valid = pd.DataFrame({"y_pred":y_pred_valid})
     # y_pred_test = pd.DataFrame({"y_pred":y_pred_test})
 
     smi = []
 
+    targets_train = [i for i in targets_train]
+    targets_valid = [i for i in targets_valid]
+    targets_test = [i for i in targets_test]
+
+    # targets_train = [0 if i[0].item() == 5 else 1 for i in targets_train]
+    # targets_valid = [0 if i[0].item() == 5 else 1 for i in targets_valid]
+    # targets_test = [0 if i[0].item() == 5 else 1 for i in targets_test]
+
+    _target_train = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{dataset}/raw/train.target", names=['target'], header=None)
+    _target_valid = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{dataset}/raw/valid.target", names=['target'], header=None)
+    _target_test = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{dataset}/raw/test.target", names=['target'], header=None)
+    _input_train = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{dataset}/raw/train.input", header=None)
+    _input_valid = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{dataset}/raw/valid.input", header=None)
+    _input_test = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{dataset}/raw/test.input", header=None)
+
+
+    train_df = pd.concat([_input_train, _target_train], axis=1, join="inner") #, y_pred_train
+    train_df = train_df.rename(columns={0: "SMILES"})
+    valid_df = pd.concat([_input_valid, _target_valid], axis=1, join="inner") # , y_pred_valid
+    valid_df = valid_df.rename(columns={0: "SMILES"})
+    test_df = pd.concat([_input_test, _target_test], axis=1, join="inner") # , y_pred_test
+    test_df = test_df.rename(columns={0: "SMILES"})
+
+
+    # train_df = _input_train
+
+    train_df = generateMurcoScaffold(train_df)
+    valid_df = generateMurcoScaffold(valid_df)
+    test_df = generateMurcoScaffold(test_df)
+    print("finished get scaffold")
+
+    df =  pd.concat([train_df, valid_df, test_df],
+                keys=['train', 'valid', 'test']).reset_index()
+
+    # df = train_df
+
+
+
+    len_dataset = len(df)
+
+
+    print(f"Saving to {df_filename}")
+    df.to_csv(df_filename)
+
 
     def get_feautures(sm):
         umap_X = []
-        # torch.cuda.empty_cache()
         with torch.no_grad():
             for i in sm:
                 last_layer_features = bart.extract_features(i)
@@ -184,44 +228,19 @@ def generate_df_np():
     umap_X_test = [i.numpy() for i in umap_X_test]
 
 
-    targets_train = [0 if i[0].item() == 5 else 1 for i in targets_train]
-    targets_valid = [0 if i[0].item() == 5 else 1 for i in targets_valid]
-    targets_test = [0 if i[0].item() == 5 else 1 for i in targets_test]
-
-    _target_train = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/BBBP/raw/train.target", names=['target'], header=None)
-    _target_valid = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/BBBP/raw/valid.target", names=['target'], header=None)
-    _target_test = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/BBBP/raw/test.target", names=['target'], header=None)
-    _input_train = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/BBBP/raw/train.input", header=None)
-    _input_valid = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/BBBP/raw/valid.input", header=None)
-    _input_test = pd.read_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/BBBP/raw/test.input", header=None)
-
-
-    train_df = pd.concat([_input_train, _target_train], axis=1, join="inner") #, y_pred_train
-    train_df = train_df.rename(columns={0: "SMILES"})
-    valid_df = pd.concat([_input_valid, _target_valid], axis=1, join="inner") # , y_pred_valid
-    valid_df = valid_df.rename(columns={0: "SMILES"})
-    test_df = pd.concat([_input_test, _target_test], axis=1, join="inner") # , y_pred_test
-    test_df = test_df.rename(columns={0: "SMILES"})
-
-    train_df = generateMurcoScaffold(train_df)
-    valid_df = generateMurcoScaffold(valid_df)
-    test_df = generateMurcoScaffold(test_df)
-    print("finished get scaffold")
-
-    df = pd.concat([train_df, valid_df, test_df],
-                keys=['train', 'valid', 'test']).reset_index()
-
     X_list = [umap_X_train, umap_X_valid, umap_X_test]
     X = list(chain.from_iterable(X_list))
     X = np.array(X)
-    X = X.reshape(len_dataset, 1024)
+    X = X.reshape(len(X), 1024)
 
-    print(f"Saving to {df_filename}")
-    df.to_csv(df_filename)
     print(f"Saving to {np_filename}")
     np.save(np_filename, X)
 
     return df, X
+
+
+# if os.path.exists(np_filename):
+#     generate_df_np()
 
 if not os.path.exists(np_filename):
     generate_df_np()

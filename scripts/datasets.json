@@ -1257,12 +1257,27 @@
         ],
         "smiles_index": -2,
         "split_type": "random",
-        "score": "rmse",
+        "score": "auc",
         "label_col_name": "Activity",
         "smiles_col_name": "Canonical_Smiles",
-        "k_fold": 10
+
+        "k_fold": 5
     },
 
+    "Ames_": {
+        "type": "classification",
+        "filter": false,
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -3,
+        "fp_index": -2,
+        "split_type": "random",
+        "score": "auc",
+        "label_col_name": "Classification",
+        "smiles_col_name": "SMILES",
+        "fp_col_name": "ecfp_fingerprint"
+    },
 
     "MNInVitro": {
         "type": "classification",

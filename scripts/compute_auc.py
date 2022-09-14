@@ -37,19 +37,19 @@ parser.add_argument('--dataset-name', required=True,
                         help='dataset name.')
 parser.add_argument('--subtask',
                         help='subtask')
-parser.add_argument('--warmup-update', required=True,
-                        help='warmup update')
-parser.add_argument('--total-number-update', required=True,
-                        help='total number update')
-parser.add_argument('--lr', default="1e-5",
+parser.add_argument('--warmup-update',
+                        help='warmup update', default=46)
+parser.add_argument('--total-number-update',
+                        help='total number update', default=290)
+parser.add_argument('--lr', default="5e-6",
                         help='learning rate')
-parser.add_argument('--dropout', default="0.1",
+parser.add_argument('--dropout', default="0.3",
                         help='learning rate')
 parser.add_argument('--r3f',
                         help='learning rate')
 parser.add_argument('--noise_type',
                         help='learning rate')
-parser.add_argument('--checkpoint_name', default="checkpoint_best.pt")
+parser.add_argument('--checkpoint_name', default="chkpt_upper_bound_last_11_count_4.pt")
 args = parser.parse_args()
 
 dataset = args.dataset_name #if args.dataset_name in set(["esol", "freesolv", "lipo", "Ames", "BBBP", "BACE", "HIV"]) else f"{args.dataset_name}_{args.subtask}"
@@ -91,16 +91,17 @@ bart.cuda(device=1)
 
 
 input_dict = Dictionary.load(f"{store_path}/{dataset}/processed/input0/dict.txt")
+dataset_type = "valid"
 smiles = list(load_indexed_dataset(
-    f"{store_path}/{dataset}/processed/input0/valid", input_dict))
+    f"{store_path}/{dataset}/processed/input0/{dataset_type}", input_dict))
 
 if len(dataset_js["class_index"])>1:
     test_label_path = list()
     for i in range(len(dataset_js["class_index"])):
-        test_label_path.append(f"{store_path}/{dataset}_{i}/processed/label/valid")
+        test_label_path.append(f"{store_path}/{dataset}_{i}/processed/label/{dataset_type}")
 
 else:
-    test_label_path = f"{store_path}/{dataset}/processed/label/valid"
+    test_label_path = f"{store_path}/{dataset}/processed/label/{dataset_type}"
 
 if task_type == 'classification':
     if len(dataset_js["class_index"])>1:
