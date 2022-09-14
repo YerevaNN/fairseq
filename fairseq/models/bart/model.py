@@ -74,6 +74,7 @@ class BARTModel(TransformerModel):
         self,
         src_tokens,
         src_lengths,
+        fp_tokens,
         prev_output_tokens,
         features_only: bool = False,
         classification_head_name: Optional[str] = None,
@@ -108,7 +109,7 @@ class BARTModel(TransformerModel):
             for k, head in self.classification_heads.items():
                 # for torch script only supports iteration
                 if k == classification_head_name:
-                    x = head(sentence_representation)
+                    x = head(sentence_representation, fp_tokens)
                     break
         return x, extra
 
