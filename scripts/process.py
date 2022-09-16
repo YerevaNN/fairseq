@@ -1,6 +1,7 @@
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
+from itertools import chain
 from rdkit import Chem
 import pandas as pd
 import numpy as np
@@ -201,6 +202,30 @@ def ZINC(dataset_name, path):
     df_test['input'] = [i.rstrip("\n") for i in ts_list]
     
     return df_train, df_val, df_test
+
+def USPTO(dataset_name, path):
+    uspto = pd.read_csv(f"{path}{dataset_name}.csv")
+    smiles_reaction = uspto["reactions"]
+    smiles_list = [react.split(">") for react in smiles_reaction ]
+    in_react = [i[0] for i in smiles_list]
+    h_react = [i[1] for i in smiles_list if i == ''] # lenght is 0
+    out_react = [o[2] for o in smiles_list]
+    inp_list_0 = [inp.split(".")[0] for inp in in_react ]
+    inp_list_other = list(chain.from_iterable([inp.split(".")[1:] for inp in in_react ]))
+
+    out_list = [out.split(".")[0] for out in out_react ]
+
+    print(f"uspto lenght of first input molecule list: { len(inp_list_0)}  and 2nd and 3rd: {len(inp_list_other)}"  )
+    print(f"uspto lenght of output molecule list: {len(out_list)}")
+    my_list = [0]*int(len(inp_list_0)/2) + [1]*int(len(inp_list_0)/2)
+    train = {"SMILES": inp_list_0, "Classification": my_list}
+    test = {"SMILES": out_list, "Classification": my_list}
+    my_list = [0]*(int(len(inp_list_other)/2)) + [1]*(int(len(inp_list_other)/2)+1)
+    valid = {"SMILES": inp_list_other, "Classification": my_list}
+    train_df = pd.DataFrame(train)
+    valid_df = pd.DataFrame(valid)
+    test_df = pd.DataFrame(test)
+    return train_df, valid_df, test_df
 
 
 def split_train_val_test(df, smiles_col_name, label_col_name):
@@ -445,7 +470,7 @@ def Ames():
                 f'--destdir "{path}/processed/label" --workers 60 '))
 
 
-Ames()
+# Ames()
 
 
 

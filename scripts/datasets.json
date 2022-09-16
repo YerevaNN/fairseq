@@ -105,6 +105,19 @@
         "split_type": "scaffold",
         "score": "roc-auc"
     },
+    "USPTO-50k": {
+        "load_name": "USPTO-50k",
+        "type": "classification",
+        "label_col_name": "SMILES",
+        "smiles_col_name": "Classification",
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "filter": true,
+        "split_type": "random",
+        "score": "roc-auc"
+    },
 
     "ZINC": {
         "load_name": "ZINC",

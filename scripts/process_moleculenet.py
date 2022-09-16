@@ -19,7 +19,7 @@ EMPTY_INDEX = -1
 p = argparse.ArgumentParser(description=__doc__,
                             formatter_class=argparse.RawDescriptionHelpFormatter)
 
-p.add_argument("--input", help="input file", type=str, required=True)
+# p.add_argument("--input", help="input file", type=str, required=True)
 p.add_argument("--dataset-name", type=str, required=True)
 p.add_argument("--delimiter", type=str, default=",")
 
@@ -32,7 +32,7 @@ with open('/home/gayane/BartLM/fairseq/scripts/datasets.json') as f:
 
 dataset = datasets_json[args.dataset_name]
 si = dataset['smiles_index']
-
+input_path = "/home/gayane/BartLM"
 store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
 
 if len(dataset["class_index"]) > 1:
@@ -69,7 +69,8 @@ elif args.dataset_name == "Ames":
 
 elif args.dataset_name == "ZINC":
     train_df, valid_df, test_df = process.ZINC(args.dataset_name, path)
-
+elif args.dataset_name == "USPTO-50k":
+    train_df, valid_df, test_df = process.USPTO(args.dataset_name, "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/USPTO-50k/")
 elif args.dataset_name == "BBBP-balanced":
     test_df = pd.read_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/test_{args.dataset_name}.csv")
     train_df = pd.read_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/train_{args.dataset_name}.csv")
@@ -314,13 +315,13 @@ if len(dataset["class_index"]) > 1:
         split_train.append(cur_train)
         split_valid.append(cur_valid)
         split_test.append(cur_test)
-        cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {train_path} --outputs {cur_train} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+        cmd = f"python {input_path}/fairseq/scripts/spm_parallel.py --input {train_path} --outputs {cur_train} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
         print(cmd)
         os.system(cmd)
-        cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {valid_path} --outputs {cur_valid} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+        cmd = f"python {input_path}/fairseq/scripts/spm_parallel.py --input {valid_path} --outputs {cur_valid} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
         print(cmd)
         os.system(cmd)
-        cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {test_path} --outputs {cur_test} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+        cmd = f"python {input_path}/fairseq/scripts/spm_parallel.py --input {test_path} --outputs {cur_test} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
         print(cmd)
         os.system(cmd)
     X_splits[0], X_splits[1], X_splits[2] = split_train, split_valid, split_test
@@ -332,7 +333,7 @@ else:
         print(path)
         print(cur_path)
         splits.append(cur_path)
-        cmd = f"python {args.input}/fairseq/scripts/spm_parallel.py --input {path} --outputs {cur_path} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
+        cmd = f"python {input_path}/fairseq/scripts/spm_parallel.py --input {path} --outputs {cur_path} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
         print(cmd)
         os.system(cmd)
 
