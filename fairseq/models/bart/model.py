@@ -83,6 +83,7 @@ class BARTModel(TransformerModel):
         alignment_layer: Optional[int] = None,
         alignment_heads: Optional[int] = None,
     ):
+        self.fp_tokens_feut_len = fp_tokens.shape[1]
         if classification_head_name is not None:
             features_only = True
 
@@ -109,7 +110,8 @@ class BARTModel(TransformerModel):
             for k, head in self.classification_heads.items():
                 # for torch script only supports iteration
                 if k == classification_head_name:
-                    x = head(sentence_representation, fp_tokens)
+                    inp = torch.cat((sentence_representation, fp_tokens), 1)
+                    x = head(inp)
                     break
         return x, extra
 
@@ -153,7 +155,7 @@ class BARTModel(TransformerModel):
                     )
                 )
         self.classification_heads[name] = BARTClassificationHead(
-            input_dim=self.args.encoder_embed_dim,
+            input_dim=self.args.encoder_embed_dim + 2048,
             inner_dim=inner_dim or self.args.encoder_embed_dim,
             num_classes=num_classes,
             activation_fn=self.args.pooler_activation_fn,

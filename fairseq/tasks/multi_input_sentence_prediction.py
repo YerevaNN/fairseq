@@ -37,8 +37,9 @@ from fairseq.dataclass import ChoiceEnum
 
 logger = logging.getLogger(__name__)
 SHORTEN_METHOD_CHOICES = ChoiceEnum(["none", "truncate", "random_crop"])
-class OurDataset(TensorDataset, EpochListening):
-    pass
+class OurDataset(RawLabelDataset):
+    def collater(self, samples):
+        return torch.stack(samples)
 
 @dataclass
 class MultiInputSentencePredictionConfig(FairseqDataclass):
