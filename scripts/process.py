@@ -1,6 +1,7 @@
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
+from itertools import chain
 from rdkit import Chem
 import pandas as pd
 import numpy as np
@@ -298,21 +299,21 @@ def Ames():
     dataset_name = "Ames"
     # df = ames(dataset_name, path, smiles_col_name, label_col_name)
 
-    df = pd.read_csv("/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames_fingerprint/Ames_train.csv")
+    df = pd.read_csv(f"{store_path}/Ames_fingerprint/Ames_train.csv")
 
-    stat_train = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames/Ames/splits_train_N6512.csv"
+    stat_train = f"{store_path}/Ames/Ames/splits_train_N6512.csv"
     train_ind_list = read_file(stat_train)
 
-    _valid = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames/Ames/splits_test_N6512.csv"
+    _valid = f"{store_path}/Ames/Ames/splits_test_N6512.csv"
     valid_ind_list = read_file(_valid)
 
-    test_df = pd.read_csv("/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/Ames_fingerprint/Ames_external.csv")
-    
+    test_df = pd.read_csv(f"{store_path}/Ames_fingerprint/Ames_external.csv")
+
+
     cv_train_valid_ind_list = []
     for i in range(len(valid_ind_list)):
         test_ind = valid_ind_list[i]
         train_ind = train_ind_list[i]
-
         dataset_i = f"{dataset_name}_{i}"
         path = f"{store_path}/{dataset_i}-fold"
         os.system(f'mkdir -p {path}')
