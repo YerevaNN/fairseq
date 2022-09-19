@@ -1,6 +1,7 @@
 from sklearn.metrics import auc, roc_auc_score, precision_recall_curve, classification_report, mean_squared_error, confusion_matrix
 from fairseq.data.data_utils import load_indexed_dataset
 # from sklearn.linear_model import ridge_regression
+from fairseq.tasks.multi_input_sentence_prediction import OurDataset
 from fairseq.models.bart import BARTModel
 from fairseq.data import Dictionary
 import torch.nn.functional as F 
@@ -44,12 +45,14 @@ parser.add_argument('--total-number-update',
 parser.add_argument('--lr', default="5e-6",
                         help='learning rate')
 parser.add_argument('--dropout', default="0.3",
-                        help='learning rate')
+                        help='dropout')
 parser.add_argument('--r3f',
-                        help='learning rate')
+                        help='lambda param')
 parser.add_argument('--noise_type',
-                        help='learning rate')
-parser.add_argument('--checkpoint_name', default="chkpt_upper_bound_last_11_count_4.pt")
+                        help='normal or unniform')
+parser.add_argument('--inp-count', default=1,
+                        help='input count')
+parser.add_argument('--checkpoint_name', default="checkpoint_best.pt")
 args = parser.parse_args()
 
 dataset = args.dataset_name #if args.dataset_name in set(["esol", "freesolv", "lipo", "Ames", "BBBP", "BACE", "HIV"]) else f"{args.dataset_name}_{args.subtask}"
@@ -94,6 +97,17 @@ input_dict = Dictionary.load(f"{store_path}/{dataset}/processed/input0/dict.txt"
 dataset_type = "valid"
 smiles = list(load_indexed_dataset(
     f"{store_path}/{dataset}/processed/input0/{dataset_type}", input_dict))
+if int(args.inp_count) > 1:
+    input1_path = f"{store_path}/{dataset}/raw/{dataset_type}.input1"
+    with open(input1_path) as f:
+        lines = f.readlines()
+        lines = [list(map(int,list(l.strip()))) for l in lines]
+    fp_tokens = [torch.Tensor(item) for item in lines]
+    # tns = torch.Tensor(lines)
+    # input1 = OurDataset(lines)
+    # fp_tokens = [torch.cat((sm, fp)) for sm, fp in zip(smiles,lines)]
+    # smiles = inp
+head_name = "sentence_classification_head"  # "multi_input_sentence_classification_head" if int(args.inp_count) > 1 else 
 
 if len(dataset_js["class_index"])>1:
     test_label_path = list()
@@ -130,24 +144,24 @@ if len(dataset_js["class_index"])>1:
         y = list()
         for i, (smile, target) in tqdm(list(enumerate(zip(smiles, targets_list[j])))):
             smile = torch.cat((torch.cat((torch.tensor([0]), smile[:126])), torch.tensor([2])))
-            output = bart.predict(f'sentence_classification_head{j}', smile)
+            output = bart.predict(f'{head_name}{j}', smile)
             target = target[0].item()
             y_pred.append(output[0][1].exp().item())
             y.append(target - 4)
         y_pred_list.append(y_pred)
         y_list.append(y)
 else:
-    for i, (smile, target) in tqdm(list(enumerate(zip(smiles, targets)))):
+    for i, (smile, fp, target) in tqdm(list(enumerate(zip(smiles, fp_tokens, targets)))):
         smile = torch.cat((torch.cat((torch.tensor([0]), smile[:126])), torch.tensor([2])))  
         if task_type =="classification":
-            output = bart.predict('sentence_classification_head', smile)
+            output = bart.predict(head_name, smile, fp)
             target = target[0].item()
             y_pred.append(output[0][1].exp().item())
             y.append(target - 4)
             sm.append(bart.decode(smile))
             
         elif task_type == "regression":
-            output = bart.predict('sentence_classification_head', smile, return_logits=True)
+            output = bart.predict(head_name, smile, return_logits=True)
             y_pred.append(output[0][0].item())
             y.append(target)
     d = {"SMILES": sm, "prediction": y_pred , "y_true": y }

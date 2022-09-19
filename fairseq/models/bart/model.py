@@ -83,7 +83,6 @@ class BARTModel(TransformerModel):
         alignment_layer: Optional[int] = None,
         alignment_heads: Optional[int] = None,
     ):
-        self.fp_tokens_feut_len = fp_tokens.shape[1]
         if classification_head_name is not None:
             features_only = True
 

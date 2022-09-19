@@ -117,7 +117,7 @@ class BARTHubInterface(GeneratorHubInterface):
         return res
 
     def extract_features(
-        self, tokens: torch.LongTensor, return_all_hiddens: bool = False
+        self, tokens: torch.LongTensor, fp_tokens, return_all_hiddens: bool = False
     ) -> torch.Tensor:
         if tokens.dim() == 1:
             tokens = tokens.unsqueeze(0)
@@ -138,6 +138,7 @@ class BARTHubInterface(GeneratorHubInterface):
         prev_output_tokens[:, 1:] = tokens[:, :-1]
         features, extra = self.model(
             src_tokens=tokens,
+            fp_tokens=fp_tokens,
             src_lengths=None,
             prev_output_tokens=prev_output_tokens,
             features_only=True,
@@ -157,15 +158,16 @@ class BARTHubInterface(GeneratorHubInterface):
             name, num_classes=num_classes, embedding_size=embedding_size, **kwargs
         )
 
-    def predict(self, head: str, tokens: torch.LongTensor, return_logits: bool = False):
+    def predict(self, head: str, tokens: torch.LongTensor, fp_tokens, return_logits: bool = False):
         if tokens.dim() == 1:
             tokens = tokens.unsqueeze(0)
-        features = self.extract_features(tokens.to(device=self.device))
+        features = self.extract_features(tokens.to(device=self.device), fp_tokens)
         sentence_representation = features[
             tokens.eq(self.task.source_dictionary.eos()), :
         ].view(features.size(0), -1, features.size(-1))[:, -1, :]
-
-        logits = self.model.classification_heads[head](sentence_representation)
+        fp_tokens = torch.unsqueeze(fp_tokens, 0).to(device=self.device)
+        inp = torch.cat((sentence_representation, fp_tokens), 1)
+        logits = self.model.classification_heads[head](inp)
         if return_logits:
             return logits
         return F.log_softmax(logits, dim=-1)
