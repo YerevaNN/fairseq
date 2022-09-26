@@ -10,6 +10,7 @@ import torch
 import json
 import umap
 import os
+from tqdm import tqdm
 
 
 pretrained_model = True
@@ -27,7 +28,7 @@ min_dists = [0.4]
 # col_valid = ["darkred" if i==1 else "dimgrey" for i in df[df['level_0']=="valid"].target.to_list()]
 # col_test = ["green" if i==1 else "darkblue" for i in df[df['level_0']=="test"].target.to_list()]
 
-color = ["gray", "black", "blue", "red", "green", "greenyellow", "violet"]
+color = ['lightgray', '#0000ff', '#ff1493', '#1e90ff', '#ffa500', '#00ff00', '#66cdaa']
 
 
 leg = []
@@ -42,22 +43,29 @@ leg = []
 
 
 # dataset_len = [475196, 2039, 1478, 7831, 1427, 641]
-dataset_name_list = [ "BBBP", "clintox", "Tox21", "SIDER", "Genotoxicity", "esol", "ZINC", "lipo", "HIV"] 
+# dataset_name_list = [ "BBBP", "clintox", "Tox21", "SIDER", "Genotoxicity", "esol", "ZINC", "lipo", "HIV"] 
 
-in_ = [(14544, 489740), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544), (489740, 493940), (493940, 535067)]
+# in_ = [(14544, 489740), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544), (489740, 493940), (493940, 535067)]
 
 
-dataset_name_list = ["BBBP", "clintox", "Tox21", "SIDER", "Genotoxicity", "esol", "ZINC"] 
-in_ = [(0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544), (14544, 489740)]
+# dataset_name_list = ["BBBP", "clintox", "Tox21", "SIDER", "Genotoxicity", "esol"]#, "ZINC965k"] 
+# in_ = [(0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544)]#, (14544, 14544+965625)]
+
+
+dataset_name_list = ["BBBP","clintox", "Tox21", "SIDER", "ZINC864k", "USPTO-50k"] 
+in_ = [(0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 12775+864085), (12775+864085, 12775+864085+135605)]
+
+# dataset_name_list= [ "USPTO-50k", "ZINC"]
+# in_ = [(0, 135605), (135605, 610801)]
 
 np_filename = f'{path}/np_{dataset_name_list[0]}_pretrainedTrue.npy'
 df_filename = f'{path}/df_{dataset_name_list[0]}_pretrainedTrue.csv'
 print(dataset_name_list[0])
 X_ = np.load(np_filename)
-df_0 = pd.read_csv(df_filename) 
+# df_0 = pd.read_csv(df_filename) 
 dir_name = '_'.join(dataset_name_list)
 os.system(f"mkdir -p {path}/{dir_name}")
-data_len = 489740
+data_len = 610801
 for n_neighbor in n_neighbors:
     for min_dist in min_dists:
 
@@ -70,7 +78,7 @@ for n_neighbor in n_neighbors:
                 filename = filename + f"_{data_name}"
                 if i == 0: 
                     X = X_
-                    df_ = df_0
+#                     df_ = df_0
                 else:
                     print("Create umap matrix part")
 
@@ -81,7 +89,7 @@ for n_neighbor in n_neighbors:
                     if os.path.exists(df_filename_):
                         df_data = pd.read_csv(df_filename_)
 
-                    Zinc = data_name == "ZINC"
+                    Zinc = True ## ??? # data_name.startswith("ZINC")
                     n = X_data.shape[0]
                     tp = ["train"]*n if Zinc else None
                     tr = np.zeros(n) if Zinc else None
@@ -91,14 +99,14 @@ for n_neighbor in n_neighbors:
 
                     print(X_data.shape, X.shape)
                     X = np.concatenate((X, X_data))
-                    df_ = pd.concat([df_, df_data], ignore_index=True, sort=False)
+#                     df_ = pd.concat([df_, df_data], ignore_index=True, sort=False)
 
-                    if data_name == "ZINC":
-                        df_data.to_csv(f'{path}/df_{data_name}_pretrainedTrue.csv')
+#                     if Zinc:
+#                         df_data.to_csv(f'{path}/df_{data_name}_pretrainedTrue.csv')
             print(f"---------- neighbor:  {n_neighbor}, minimum distance: {min_dist} ----------")
             data_len = X.shape[0]
             reducer = umap.UMAP(
-                n_components=2, min_dist=min_dist, n_neighbors=n_neighbor, transform_seed=5, verbose=False
+                n_components=2, min_dist=min_dist, n_neighbors=n_neighbor, transform_seed=5, verbose=True
             ).fit(X[:data_len])
             
             X_umap_ = reducer.transform(X)
@@ -106,8 +114,8 @@ for n_neighbor in n_neighbors:
             data = {
                     "x": X_umap_[:, 0].tolist(),
                     "y": X_umap_[:, 1].tolist(),
-                    "label": df_["target"].values,
-                    "split": df_["level_0"].values,
+#                     "label": df_["target"].values,
+#                     "split": df_["level_0"].values,
 
                 }
             print(f"Saving to {np_filename}")
@@ -123,39 +131,63 @@ for n_neighbor in n_neighbors:
             df = pd.read_csv(df_filename)
             print(f"Reading from {np_filename}")
             X = np.load(np_filename)
+            print("X.shape", X.shape)
         
-        fig, ax = plt.subplots(figsize=(8,8))
+        fig, ax = plt.subplots(figsize=(6, 6))
         # X_filter = X[(X[:,0] >= -2.3) & (X[:,0] <= 2.3) & (X[:,1] >= 1)]
         # df_filter = df[(X[:,0] >= -2.3) & (X[:,0] <= 2.3) & (X[:,1] >= 1)]
-        Zinc_level = 70
 
         # dataset_name_list__ = ["ZINC", "HIV", "Tox21", "lipo", "BBBP", "clintox", "SIDER", "Genotoxicity", "esol"] 
-
         # in_ = [(14544, 489740), (493940, 535067), (3517, 11348), (489740, 493940), (0, 2039), (2039, 3517), (11348, 12775), (12775, 13416), (13416, 14544)]
-        dataset_name_list__ = ["ZINC", "BBBP", "ClinTox", "Tox21", "SIDER", "Micronucleus Assay", "ESOL"] 
+        
+        
+#         dataset_name_list__ = ["BBBP", "ClinTox", "Tox21", "SIDER", "Micronucleus Assay", "ESOL"] 
+#         in_ = [ (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544)]
+        
+#         dataset_name_list__ = ["ZINC965k", "BBBP", "ClinTox", "Tox21", "SIDER", "Micronucleus Assay", "ESOL"] 
+#         in_ = [(14544, 14544+965625), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544)]
 
-        in_ = [(14544, 489740), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544)]
+        dataset_name_list__ = ["ZINC864k", "USPTO-50k", "BBBP", "ClinTox", "Tox21", "SIDER"] 
+        in_ = [(12775, 12775+864085), (12775+864085, 12775+864085+135605), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775)]
 
-        for i, data_name in enumerate(dataset_name_list__):
-            if data_name == "ZINC":
-                x = df["x"].values[in_[i][0] : in_[i][1]]
-                y =  df["y"].values[in_[i][0] : in_[i][1]]
+        # dataset_name_list__ = [ "ZINC", "USPTO-50k"]
+        # in_ = [(135605, 610801), (0, 135605)]
 
-                # x_filter = x[(x >= 1) & (x <= 8) & (y >= 0) & (y <= 9)]
-                # y_filter = y[(x >= 1) & (x <= 8) & (y >= 0) & (y <= 9)]
-                # ax = sns.kdeplot(x_filter, y_filter, alpha=0.6, thresh=.2, levels=Zinc_level, label=f"{data_name}", color=color[i], cmap="viridis")
-                ax = sns.kdeplot(x, y, alpha=0.6, thresh=.2, levels=Zinc_level, label=f"{data_name}", color=color[i])
-            else:
-                x = df["x"].values[in_[i][0] : in_[i][1]]
-                y = df["y"].values[in_[i][0] : in_[i][1]]
-                ax = sns.kdeplot(x, y, alpha=0.6, thresh=.2, levels=3, label=f"{data_name}", color=color[i])
-            # ax = sns.kdeplot(df[df["label"] ==1]["x"].values, df[df["label"] ==1]["y"].values,  alpha=0.6, thresh=.2, levels=6, label=f"{data_name}_1")
-
+#         dataset_name_list__ = [ "ZINC", "USPTO-50k: first input", "USPTO-50k: outher inputs", "USPTO-50k: output"]
+#         in_ = [(135605, 610801), (0, 50016), (50016, 85589), (85589, 135605)]
+        print(f"Plotting {len(dataset_name_list__)} datasets")
+    
+        limit = 10000
+    
+        for i, data_name in enumerate(tqdm(dataset_name_list__)):
+            levels, thr, fill, alpha = 1, 0.05, False, 0.8
+            if data_name.startswith("ZINC"):
+                levels = 10
+                thr = 0.001
+                fill = True
+                alpha = 0.7
+            elif 'USPTO' in data_name:
+                levels = 1
+                fill = False
+                alpha = 0.8
+                
+            x = df["x"].values[in_[i][0] : in_[i][1]][:limit]
+            y =  df["y"].values[in_[i][0] : in_[i][1]][:limit]
+            
+#             thr = min(0.1, 1000.0 / (in_[i][1] - in_[i][0]))
+            
+            # x_filter = x[(x >= 1) & (x <= 8) & (y >= 0) & (y <= 9)]
+            # y_filter = y[(x >= 1) & (x <= 8) & (y >= 0) & (y <= 9)]
+            # ax = sns.kdeplot(x_filter, y_filter, alpha=0.6, thresh=.2, levels=Zinc_level, label=f"{data_name}", color=color[i], cmap="viridis")
+            print(data_name, levels, thr)
+            ax = sns.kdeplot(x[:], y[:], alpha=alpha, thresh=thr, fill=fill, levels=levels, label=f"{data_name}", color=color[i])
+        
         handles = [mpatches.Patch(facecolor=color[i], label=dataset_name) for i, dataset_name in enumerate(dataset_name_list__)]
         plt.legend(handles=handles)    # leg.append(f"{data_name}_1")
-        plt.savefig(f"umap_{n_neighbor}_{min_dist}_Zinc_level_{Zinc_level}.png")
-        print(f"Finish saving: umap_{n_neighbor}_{min_dist}_Zinc_level_{Zinc_level}.png")
-        plt.savefig(f"umap_{n_neighbor}_{min_dist}_Zinc_level_{Zinc_level}.pdf")
-        print(f"Finish saving: umap_{n_neighbor}_{min_dist}_Zinc_level_{Zinc_level}.pdf")
+        name = f"umap_{n_neighbor}_{min_dist}_{'_'.join(dataset_name_list__)}"
+        plt.savefig(f"{name}.png")
+        print(f"Finish saving: {name}.png")
+        plt.savefig(f"{name}.pdf")
+        print(f"Finish saving: {name}.pdf")
         
 

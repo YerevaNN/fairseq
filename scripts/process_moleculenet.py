@@ -69,6 +69,8 @@ elif args.dataset_name == "Ames":
 
 elif args.dataset_name == "ZINC":
     train_df, valid_df, test_df = process.ZINC(args.dataset_name, path)
+elif args.dataset_name.startswith("ZINC_part"):
+    train_df, valid_df, test_df = process.ZINC_by_parts(args.dataset_name, path)
 elif args.dataset_name == "USPTO-50k":
     train_df, valid_df, test_df = process.USPTO(args.dataset_name, "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/USPTO-50k/")
 elif args.dataset_name == "BBBP-balanced":
@@ -144,11 +146,11 @@ if len(dataset["class_index"]) >1:
         test_df.to_csv(f"{store_path}/{args.dataset_name}_{i}/{args.dataset_name}/test_{args.dataset_name}.csv")
         train_df.to_csv(f"{store_path}/{args.dataset_name}_{i}/{args.dataset_name}/train_{args.dataset_name}.csv")
         valid_df.to_csv(f"{store_path}/{args.dataset_name}_{i}/{args.dataset_name}/valid_{args.dataset_name}.csv")
-# else:
+else:
 
-    # test_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/test_{args.dataset_name}.csv")
-    # train_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/train_{args.dataset_name}.csv")
-    # valid_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/valid_{args.dataset_name}.csv")
+    test_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/test_{args.dataset_name}.csv")
+    train_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/train_{args.dataset_name}.csv")
+    valid_df.to_csv(f"{store_path}/{args.dataset_name}/{args.dataset_name}/valid_{args.dataset_name}.csv")
 
 
 loc = valid_df.columns.get_loc
@@ -229,6 +231,7 @@ else:
     os.system(f"mkdir {store_path}/{args.dataset_name}/tokenized")
     os.system(f"mkdir {store_path}/{args.dataset_name}/processed")
     os.system(f'mkdir {store_path}/{args.dataset_name}/processed/label')
+    os.system(f"mkdir {store_path}/{args.dataset_name}/processed/input0")
     with open(f"{store_path}/{args.dataset_name}/processed/label/train.label", "w") as f:
         for item in class_train:
             f.write("%s\n" % item)
@@ -269,8 +272,6 @@ for name, smiles in zip(names, (smiles_train, smiles_val, smiles_test)):
         with open(new_path, "w+") as f:
             for smile in smiles:
                 f.write(f"{smile}\n")
-
-    
 
 print("Writing Output Splits")
 if len(dataset['class_index'])>1:

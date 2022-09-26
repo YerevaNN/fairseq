@@ -47,7 +47,7 @@ def add_edge_to_graph(G, e1, e2):
 
 
 
-dataset = 'lipo'
+dataset = 'esol'
 pretrained_model = True
 # dataset = dataset_name if dataset_name in set(["BBBP", "BACE", "HIV"]) else f"{dataset_name}_{args.subtask}"
 
@@ -60,7 +60,7 @@ def generate_df_np():
     from fairseq.data import Dictionary
     import torch.nn.functional as F 
 
-    pretrained = "/input0" if pretrained_model else ""
+    pretrained = "" if pretrained_model else "/input0"
     store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
     model = f"{store_path}/{dataset}/processed{pretrained}"
 

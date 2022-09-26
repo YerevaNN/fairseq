@@ -203,6 +203,27 @@ def ZINC(dataset_name, path):
     
     return df_train, df_val, df_test
 
+
+def ZINC_by_parts(dataset_name, path):
+    
+    print(path)
+    print(dataset_name)
+    data = pd.read_csv(f"{path}/{dataset_name}.csv", sep="/t")
+    import random
+    n = len(data)
+    l = [0]*int(n/2) + [1]*(n - int(n/2)) 
+    random.shuffle(l)
+    data["Classification"] = l
+
+    df_train = data[: int(n/3)]
+    df_val = data[int(n/3) : int(2*n/3)]
+    df_test =data[int(2*n/3) :]
+
+    return df_train, df_val, df_test
+
+# ZINC_part1("ZINC_part1", "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/ZINC_part1/ZINC_part1")
+
+
 def USPTO(dataset_name, path):
     uspto = pd.read_csv(f"{path}{dataset_name}.csv")
     smiles_reaction = uspto["reactions"]
