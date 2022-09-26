@@ -132,6 +132,59 @@
         "split_type": "random",
         "score": "roc-auc"
     },
+    "ZINC_part1": {
+        "load_name": "ZINC_part1",
+        "type": "classification",
+        "label_col_name": "SMILES",
+        "smiles_col_name": "Classification",
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "filter": true,
+        "split_type": "random",
+        "score": "roc-auc"
+    },
+    "ZINC_part2": {
+        "load_name": "ZINC_part2",
+        "type": "classification",
+        "label_col_name": "SMILES",
+        "smiles_col_name": "Classification",
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "filter": true,
+        "split_type": "random",
+        "score": "roc-auc"
+    },
+    "ZINC_part3": {
+        "load_name": "ZINC_part3",
+        "type": "classification",
+        "label_col_name": "SMILES",
+        "smiles_col_name": "Classification",
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "filter": true,
+        "split_type": "random",
+        "score": "roc-auc"
+    },
+    "ZINC_part4": {
+        "load_name": "ZINC_part4",
+        "type": "classification",
+        "label_col_name": "SMILES",
+        "smiles_col_name": "Classification",
+        "class_index": [
+            -1
+        ],
+        "smiles_index": -2,
+        "filter": true,
+        "split_type": "random",
+        "score": "roc-auc"
+    },
+
     "japan": {
         "type": "classification",
         "class_index": [
