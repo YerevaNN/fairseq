@@ -37,7 +37,7 @@ def compute_conf_matrix(y_pred, y):
     y_pred_binary = np.array(y_pred) > 0.5
     print(classification_report(y, y_pred_binary))
 
-def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits: bool = False):
+def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits: bool = False, dataset_js: dict = {}):
     if tokens.dim() == 1:
         tokens = tokens.unsqueeze(0)
     features = self.extract_features(tokens.to(device=self.device))

@@ -1,5 +1,12 @@
 from sklearn.metrics import auc, roc_auc_score, precision_recall_curve, classification_report, mean_squared_error, confusion_matrix
+import torch.nn.functional as F 
+
 import pandas as pd
+import numpy as np
+import torch
+
+
+
 def compute_rmse(y_pred, y, ma, mi):
     y_prd = [(ma -mi)*x +mi  for x in y_pred]
     y_l = [(ma -mi)*x + mi  for x in y]
@@ -20,7 +27,7 @@ def compute_conf_matrix(y_pred, y):
     y_pred_binary = np.array(y_pred) > 0.5
     print(classification_report(y, y_pred_binary))
 
-def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits: bool = False):
+def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits: bool = False, dataset_js: dict = {}):
     if tokens.dim() == 1:
         tokens = tokens.unsqueeze(0)
     features = self.extract_features(tokens.to(device=self.device))
