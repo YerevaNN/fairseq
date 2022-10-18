@@ -28,7 +28,7 @@ min_dists = [0.4]
 # col_valid = ["darkred" if i==1 else "dimgrey" for i in df[df['level_0']=="valid"].target.to_list()]
 # col_test = ["green" if i==1 else "darkblue" for i in df[df['level_0']=="test"].target.to_list()]
 
-color = ['lightgray', '#0000ff', '#ff1493', '#1e90ff', '#ffa500', '#00ff00', '#66cdaa']
+color = ['lightgray', "#6600cc", '#b3003b', '#0000ff', '#ff1493', '#1e90ff', '#ffa500', '#00ff00', '#66cdaa', '#4d9061']
 
 
 leg = []
@@ -52,8 +52,13 @@ leg = []
 # in_ = [(0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544)]#, (14544, 14544+965625)]
 
 
-dataset_name_list = ["BBBP","clintox", "Tox21", "SIDER", "ZINC864k", "USPTO-50k"] 
-in_ = [(0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 12775+864085), (12775+864085, 12775+864085+135605)]
+# dataset_name_list = ["BBBP","clintox", "Tox21", "SIDER", "ZINC864k", "USPTO-50k"] 
+# in_ = [(0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 12775+864085), (12775+864085, 12775+864085+135605)]
+
+dataset_name_list = ["BBBP","clintox", "Tox21", "SIDER", "esol", "lipo", "Genotoxicity_0-fold_0", "ZINC864k", "USPTO-50k"]
+in_ = [(0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13903), (13903, 18103), (18103, 18744), (18744, 18744+864085), (18744+864085, 18744+864085+135605)]
+# dataset_name_list = [ "ZINC864k", "USPTO-50k"]
+# in_ = [(0, 135605), (135605, 135605 + 864085)]
 
 # dataset_name_list= [ "USPTO-50k", "ZINC"]
 # in_ = [(0, 135605), (135605, 610801)]
@@ -65,6 +70,7 @@ X_ = np.load(np_filename)
 # df_0 = pd.read_csv(df_filename) 
 dir_name = '_'.join(dataset_name_list)
 os.system(f"mkdir -p {path}/{dir_name}")
+# data_len = 864085
 data_len = 610801
 for n_neighbor in n_neighbors:
     for min_dist in min_dists:
@@ -147,11 +153,13 @@ for n_neighbor in n_neighbors:
 #         dataset_name_list__ = ["ZINC965k", "BBBP", "ClinTox", "Tox21", "SIDER", "Micronucleus Assay", "ESOL"] 
 #         in_ = [(14544, 14544+965625), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13416), (13416, 14544)]
 
-        dataset_name_list__ = ["ZINC864k", "USPTO-50k", "BBBP", "ClinTox", "Tox21", "SIDER"] 
-        in_ = [(12775, 12775+864085), (12775+864085, 12775+864085+135605), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775)]
+        # dataset_name_list__ = ["ZINC864k", "USPTO-50k", "BBBP","clintox", "Tox21", "SIDER", "ESOL", "Lipophilicity", "Micronucleus Assay"] 
+        # in_ = [(18150, 18150+864085), (18150+864085, 18150+864085+135605), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13309), (13309, 17509), (17509, 18150)]
+        dataset_name_list__ = ["ZINC864k", "USPTO-50k", "BBBP","clintox", "Tox21", "SIDER", "ESOL", "Lipophilicity", "Micronucleus Assay"] 
+        in_ = [(18744, 18744+864085), (18744+864085, 18744+864085+135605), (0, 2039), (2039, 3517), (3517, 11348), (11348, 12775), (12775, 13903), (13903, 18103), (18103, 18744)]
 
         # dataset_name_list__ = [ "ZINC", "USPTO-50k"]
-        # in_ = [(135605, 610801), (0, 135605)]
+        # in_ = [(0, 135605), (135605, 864085)]
 
 #         dataset_name_list__ = [ "ZINC", "USPTO-50k: first input", "USPTO-50k: outher inputs", "USPTO-50k: output"]
 #         in_ = [(135605, 610801), (0, 50016), (50016, 85589), (85589, 135605)]
@@ -171,8 +179,8 @@ for n_neighbor in n_neighbors:
                 fill = False
                 alpha = 0.8
                 
-            x = df["x"].values[in_[i][0] : in_[i][1]][:limit]
-            y =  df["y"].values[in_[i][0] : in_[i][1]][:limit]
+            x = df["x"].values[in_[i][0] : in_[i][1]] #[:limit]
+            y =  df["y"].values[in_[i][0] : in_[i][1]] #[:limit]
             
 #             thr = min(0.1, 1000.0 / (in_[i][1] - in_[i][0]))
             

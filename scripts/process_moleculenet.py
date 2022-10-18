@@ -372,3 +372,17 @@ if dataset["type"] == "classification":
             f'--validpref "{y_splits[1]}" '
             f'--testpref "{y_splits[2]}" '
             f'--destdir "{store_path}/{args.dataset_name}/processed/label" --workers 60 '))
+else:
+
+    os.system(('fairseq-preprocess --only-source '
+        f'--trainpref "{X_splits[0]}" '
+        f'--validpref "{X_splits[1]}" '
+        f'--testpref "{X_splits[2]}" '
+        f'--destdir "{store_path}/{args.dataset_name}/processed/input0" --workers 60 '
+        '--srcdict /home/gayane/BartLM/Bart/chemical/tokenizer/chem.vocab.fs'))
+    os.system(('fairseq-preprocess '
+        '--only-source '
+        f'--trainpref "{y_splits[0]}" '
+        f'--validpref "{y_splits[1]}" '
+        f'--testpref "{y_splits[2]}" '
+        f'--destdir "{store_path}/{args.dataset_name}/processed/label" --workers 60 '))

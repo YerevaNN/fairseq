@@ -128,7 +128,7 @@ if len(dataset_js["class_index"])>1:
     for j in range(len(dataset_js["class_index"])):
         y_pred = list()
         y = list()
-        for i, (smile, target) in tqdm(list(enumerate(zip(smiles, targets_list[j])))):
+        for i, (smile, target) in tqdm(enumerate(zip(smiles, targets_list[j]))):
             smile = torch.cat((torch.cat((torch.tensor([0]), smile[:126])), torch.tensor([2])))
             output = bart.predict(f'sentence_classification_head{j}', smile)
             target = target[0].item()
@@ -137,8 +137,8 @@ if len(dataset_js["class_index"])>1:
         y_pred_list.append(y_pred)
         y_list.append(y)
 else:
-    for i, (smile, target) in tqdm(list(enumerate(zip(smiles, targets)))):
-        smile = torch.cat((torch.cat((torch.tensor([0]), smile[:126])), torch.tensor([2])))  
+    for i, (smile, target) in tqdm(enumerate(zip(smiles, targets))):
+        smile = torch.cat((torch.cat((torch.tensor([0]), smile[:126])), torch.tensor([2])))   # example smile = tensor([ 63,  43,   6,  12,   8,   5,  12,   8,   5,   4,   4,   7,   4,   9,  13,  19,   7,  22,   5,   9,  27,  26,   4,  55,   7,   4,   4,   4, 74,   9,  27,   9,  24,   4,   7,   8,   5,   4,   7,  11,  14,  10, 13, 357,   4,   9,  13,  19,   7,  25,  24,   4,   7,   4,   5,   7,  4,   5,   4,   5,   4,   6,   2])
         if task_type =="classification":
             output = bart.predict('sentence_classification_head', smile)
             target = target[0].item()
