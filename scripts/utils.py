@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import pandas as pd
 import numpy as np
 import torch
+import os
 
 
 
@@ -43,3 +44,13 @@ def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits:
     for i in range(len(dataset_js["class_index"])>1): 
         probabies.append(F.log_softmax(logits[i], dim=-1))
     return probabies
+
+
+def fairseq_preprocess_cmd(_train, _valid, _test, input0_or_label, store_path, dataset_name):
+
+    os.system(('fairseq-preprocess --only-source '
+        f'--trainpref "{_train}" '
+        f'--validpref "{_valid}" '
+        f'--testpref "{_test}" '
+        f'--destdir "{store_path}/{dataset_name}/processed/{input0_or_label}" --workers 60 '
+        '--srcdict /home/gayane/BartLM/Bart/chemical/tokenizer/chem.vocab.fs'))
