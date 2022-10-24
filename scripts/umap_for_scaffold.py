@@ -1,5 +1,6 @@
 from tkinter import N
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
+from scripts.process import getMurcoScaffoldList
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from itertools import chain
@@ -187,9 +188,9 @@ def generate_df_np():
 
     # train_df = _input_train
 
-    train_df = generateMurcoScaffold(train_df)
-    valid_df = generateMurcoScaffold(valid_df)
-    test_df = generateMurcoScaffold(test_df)
+    train_df = getMurcoScaffoldList(train_df, "SMILES", False)
+    valid_df = getMurcoScaffoldList(valid_df, "SMILES", False)
+    test_df = getMurcoScaffoldList(test_df, "SMILES", False)
     print("finished get scaffold")
 
     df =  pd.concat([train_df, valid_df, test_df],
@@ -249,115 +250,3 @@ print(f"Reading from {df_filename}")
 df = pd.read_csv(df_filename)
 print(f"Reading from {np_filename}")
 X = np.load(np_filename)
-
-exit()
-
-subset = "train"
-
-pretr = "-pretrained" if pretrained_model else ""
-
-
-log_save_dir = Path(f"./umap-graph-all{pretr}/")
-log_save_dir.mkdir(parents=True, exist_ok=True)
-n_neighbors = [100] # [10, 40, 80, 100]
-min_dists = [0.8] # [0.4, 0.6, 0.8, 1]
-# tar = [0 if i[0].item() == 5 else 1 for i in targets]
-
-
-col_train = ["orange" if i==1 else "pink" for i in df[df['level_0']=="train"].target.to_list()]
-col_valid = ["darkred" if i==1 else "dimgrey" for i in df[df['level_0']=="valid"].target.to_list()]
-col_test = ["green" if i==1 else "darkblue" for i in df[df['level_0']=="test"].target.to_list()]
-
-
-col = list(chain.from_iterable([col_train, col_valid, col_test]))
-node_shape = ["o" if i==1 else "v" for i in df.target.to_list()]
-
-for n_neighbor in n_neighbors:
-    for min_dist in min_dists:
-        print(f"---------- neighbor:  {n_neighbor}, minimum distance: {min_dist} ----------")
-        reducer = umap.UMAP(
-            n_components=2, min_dist=min_dist, n_neighbors=n_neighbor, transform_seed=5, verbose=False
-        ).fit(X)
-        X_umap_ = reducer.transform(X)
-        data = {
-                "x": X_umap_[:, 0].tolist(),
-                "y": X_umap_[:, 1].tolist(),
-                "label": df["target"].values,
-                # "y_pred": df["y_pred"].values,
-                "split": df["level_0"].values,
-                "MurckoScaffold": df["MurckoScaffold"].values,
-                "col": col
-            }
-        df_ = pd.DataFrame(data=data)
-        
-        nodes = np.arange(df_.shape[0])
-        
-        G = nx.Graph()
-        G.add_nodes_from(nodes)
-        pos = [[df_['x'][i], df_['y'][i]] for i in range(df_.shape[0])]
-
-        all_datasets = list(set(df_["MurckoScaffold"]))
-        edges = []
-        distance = np.zeros((len(df), len(df))) + 100000
-
-        stats = {
-            "size": [],
-            "split": [],
-            "acc": [],
-        }
-
-        for s in all_datasets:
-            A = df_[df_['MurckoScaffold'] == s]
-
-            n_ = A.shape[0] # number of scaffold types
-            if n_ == 0:
-                continue
-
-            acc = 100 * metrics.accuracy_score(A['label'], A["y_pred"] <= 0.5)
-            stats['size'].append(n_)
-            stats['split'].append(A['split'].values[0])
-            stats['acc'].append(acc)
-
-            # if n_ <= 15:
-            #     continue
-            # idx = [k for k in range(n_)]
-            # for l in [0,1]:
-                # A_same_label = A[A["label"] == l]
-                # n_ = A_same_label.shape[0] # number of scaffold types
-            # idx = [k for k in range(n_)]
-            # A['idx'] = idx
-            ed_p = A.index.to_list()
-            for i in range(len(ed_p)):
-                for j in range(i + 1, len(ed_p)-1):
-                    edges.append((ed_p[i], ed_p[j]))
-                    distance[ed_p[i], ed_p[j]] = 1
-        
-        df_stats = pd.DataFrame(stats)
-        df_stats.to_csv(f"{dataset_name}_stats.csv")
-
-        # print(edges)
-        for i in range(len(edges)):
-        
-            add_edge_to_graph(G, edges[i][0], edges[i][1])
-        
-        print("Starting the layout algorithm")
-        pos = nx.spring_layout(G, iterations=50, k=0.15)
-        # tsne = TSNE(2, metric="precomputed").fit_transform(distance)
-        # pos = tsne
-        print("...Done")
-
-
-        fig, ax = plt.subplots()
-
-        nx.draw_networkx(G, pos=pos, ax=ax, node_size=10, edge_color="black", 
-        linewidths=0.5, node_color=col, alpha=0.4, width=0.2,  node_shape='o', with_labels=False)
-        
-        plt.axis("on")
-        ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=False)
-        plt.xlabel("Orange and pink are from train set, red and gray are from validation " + "\n" + "and green and darkblue are from test. " + "\n" + "Brown, orange and green have 1 label and pink, darkred and darkblue have 0 label")
-        plt.savefig(log_save_dir.joinpath(f"{subset}-{n_neighbor}-{min_dist}.pdf"))
-        plt.savefig(log_save_dir.joinpath(f"{subset}-{n_neighbor}-{min_dist}.png"))
-
-        plt.clf()
-
-        # plt.show()
