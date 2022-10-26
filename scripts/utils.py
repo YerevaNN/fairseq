@@ -1,27 +1,27 @@
-from sklearn.metrics import auc, roc_auc_score, precision_recall_curve, classification_report, mean_squared_error, confusion_matrix
+from sklearn.metrics import  roc_auc_score, classification_report, mean_squared_error
 from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
 import torch.nn.functional as F 
 from rdkit import Chem
 import pandas as pd
 import numpy as np
+import torch
 import os
-
-
 
 def compute_rmse(y_pred, y, ma, mi):
     y_prd = [(ma -mi)*x +mi  for x in y_pred]
     y_l = [(ma -mi)*x + mi  for x in y]
     df = pd.DataFrame(data={"y_l": y, "y_pred": y_prd, "y_l_scale": y_l, "y_pred_scale": y_pred})
-    print(mean_squared_error([(ma -mi)*x + mi  for x in y], [(ma -mi)*x +mi  for x in y_pred]))
+    rmse = mean_squared_error([(ma -mi)*x + mi  for x in y], [(ma -mi)*x +mi  for x in y_pred])
+    print(f"RMSE: {rmse}")
+    return rmse
 
 def compute_auc(y_pred, y):
-    print("ROC_AUC_SCORE: ", roc_auc_score(y, y_pred))
-
-def compute_prc_auc(y_pred, y):
-    prc_auc_list = list()
-    precision, recall, thresholds = precision_recall_curve(y, y_pred)
-    prc_auc_list.append(auc(recall, precision))
-    print("PRC_AUC_SCORE: ", auc(recall, precision))
+    auc = roc_auc_score(y, y_pred)
+    if auc < 0.5:
+        auc = 1 - auc
+    print(f"ROC_AUC_SCORE: {auc}")
+    
+    return auc
 
 def compute_conf_matrix(y_pred, y):
     print("Confusion matrix:")
@@ -45,7 +45,6 @@ def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits:
         probabies.append(F.log_softmax(logits[i], dim=-1))
     return probabies
 
-
 def tokenize(X_splits, inp):
     print("Tokenizing")
     splits = []
@@ -64,7 +63,7 @@ def create_raw(path, names, _train, _val, _test, file_output = ".input0"):
     print(f"Writing {file_output} Splits")
     for name, inp_or_trg in zip(names, (_train, _val, _test)):
         print(name + file_output)
-        new_path = f"{path}/raw/" + name + file_output 
+        new_path = f"{path}" + "/raw/" + name + file_output 
         _splits.append(new_path)
         with open(new_path, "w+") as f:
             for i_or_t in inp_or_trg:
