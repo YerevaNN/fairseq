@@ -1,7 +1,3 @@
-
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
 from scripts import *
 from scripts import process
 import numpy as np

@@ -1,8 +1,5 @@
-from scripts.utils import fairseq_preprocess_cmd
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from scripts import process, utils
+from process import Genotoxicity, cross_val
+from utils import tokenize, create_raw, fairseq_preprocess_cmd
 from rdkit import Chem
 import deepchem as dc
 import pandas as pd
@@ -50,7 +47,7 @@ else:
 
     
 if args.dataset_name == "Genotoxicity":
-    df = process.Genotoxicity(args.dataset_name, path)
+    df = Genotoxicity(args.dataset_name, path)
 
 elif args.is_MoleculeNet:
     # For MoleculeNet data
@@ -73,8 +70,7 @@ elif args.is_MoleculeNet:
     valid_df.drop(remove_cols, axis='columns', inplace=True)
     train_df.drop(remove_cols, axis='columns', inplace=True)
     test_df.drop(remove_cols, axis='columns', inplace=True)
-    
-    # print(train_df.head())
+
 
     if dataset['filter']:
         assert len(dataset['class_index']) == 1, "We do not want to filter multi-task datasets."
@@ -98,12 +94,12 @@ elif args.is_MoleculeNet:
         test_df.fillna(EMPTY_INDEX, inplace=True)
 
 else: 
-    v = eval(f"process.{args.dataset_name }")
+    v = eval(f"{args.dataset_name }")
     train_df, valid_df, test_df = v(args.dataset_name, path)
 
 
 if args.dataset_name == "Genotoxicity":
-    list_df, test_df = process.cross_val(df,  dataset['smiles_col_name'], dataset['label_col_name'], k_fold=5)
+    list_df, test_df = cross_val(df,  dataset['smiles_col_name'], dataset['label_col_name'], k_fold=5)
 if len(dataset["class_index"]) >1:
     print("___________________")
     for i in range(len(dataset["class_index"])):
@@ -176,8 +172,10 @@ if len(dataset['class_index'])>1:
         os.system(f"mkdir {store_path}/{args.dataset_name}_{i}/raw")
         os.system(f"mkdir {store_path}/{args.dataset_name}_{i}/tokenized")
         os.system(f"mkdir {store_path}/{args.dataset_name}_{i}/processed")
-        
         os.system(f'mkdir {store_path}/{args.dataset_name}_{i}/processed/label')
+
+        os.system(f"mkdir {store_path}/{args.dataset_name}_{i}/processed/input0")
+
         with open(f"{store_path}/{args.dataset_name}_{i}/processed/label/train.label", "w") as f:
             for item in  class_dict["class_train" +str(i)]:
                 f.write("%s\n" % item)
@@ -219,59 +217,40 @@ if len(dataset["class_index"]) >1:
     paths_ = []
     print("________________________")
     for i in range(len(dataset["class_index"])):
-        paths_ = process.create_raw(f"{store_path}/{args.dataset_name}_{i}", names, smiles_train, smiles_val, smiles_test, file_output = ".input")
+        paths_ = create_raw(f"{store_path}/{args.dataset_name}_{i}", names, smiles_train, smiles_val, smiles_test, file_output = ".input")
         X_splits.append(paths_)
 else:
-    X_splits = process.create_raw(f"{store_path}/{args.dataset_name}", names, smiles_train, smiles_val, smiles_test, file_output = ".input")
+    X_splits = create_raw(f"{store_path}/{args.dataset_name}", names, smiles_train, smiles_val, smiles_test, file_output = ".input")
 
 print("Writing Output Splits")
 if len(dataset['class_index'])>1:
     # pass
     for i in range(len(dataset['class_index'])):
-        y_splits_current = process.create_raw(f"{store_path}/{args.dataset_name}_{i}", names, 
+        y_splits_current = create_raw(f"{store_path}/{args.dataset_name}_{i}", names, 
                                 class_dict["class_train" + str(i)], class_dict["class_val" +str(i)], 
                                 class_dict["class_test" + str(i)], file_output = ".target")
         y_splits.append(y_splits_current)
 
 else:
-    y_splits = process.create_raw(path, names, class_train, class_val, class_test, file_output = ".target")
+    y_splits = create_raw(f"{store_path}/{args.dataset_name}", names, class_train, class_val, class_test, file_output = ".target")
 
 # Tokenize Texts
 
 print("Tokenizing")
 
 if len(dataset["class_index"]) > 1:
-    split_train = []
-    split_valid = []
-    split_test = []
-    for train_path, valid_path, test_path in zip(X_splits[0], X_splits[1], X_splits[2]):
-        cur_train = train_path.replace('raw', 'tokenized')
-        cur_valid = valid_path.replace('raw', 'tokenized')
-        cur_test = test_path.replace('raw', 'tokenized')
-        # print(path)
-        # print(cur_path)
-        split_train.append(cur_train)
-        split_valid.append(cur_valid)
-        split_test.append(cur_test)
-        cmd = f"python {input_path}/fairseq/scripts/spm_parallel.py --input {train_path} --outputs {cur_train} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
-        print(cmd)
-        os.system(cmd)
-        cmd = f"python {input_path}/fairseq/scripts/spm_parallel.py --input {valid_path} --outputs {cur_valid} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
-        print(cmd)
-        os.system(cmd)
-        cmd = f"python {input_path}/fairseq/scripts/spm_parallel.py --input {test_path} --outputs {cur_test} --model /home/gayane/BartLM/Bart/chemical/tokenizer/chem.model"
-        print(cmd)
-        os.system(cmd)
-    X_splits[0], X_splits[1], X_splits[2] = split_train, split_valid, split_test
+    X_splits[0] = tokenize(X_splits[0], input_path)
+    X_splits[1] = tokenize(X_splits[1], input_path)
+    X_splits[2] = tokenize(X_splits[2], input_path)
 
 else:
-    X_splits = process.tokenize(X_splits, input_path)
+    X_splits = tokenize(X_splits, input_path)
 
 
 if len(dataset["class_index"]) > 1:
     for i in range(len(dataset['class_index'])):
-        fairseq_preprocess_cmd(X_splits[0], X_splits[1], X_splits[2], "input0", store_path, f"{args.dataset_name}_{i}")
-        fairseq_preprocess_cmd(y_splits[0], y_splits[1], y_splits[2], "label", store_path, f"{args.dataset_name}_{i}")
+        fairseq_preprocess_cmd(X_splits[i][0], X_splits[i][1], X_splits[i][2], "input0", store_path, f"{args.dataset_name}_{i}")
+        fairseq_preprocess_cmd(y_splits[i][0], y_splits[i][1], y_splits[i][2], "label", store_path, f"{args.dataset_name}_{i}")
 else:
     fairseq_preprocess_cmd(X_splits[0], X_splits[1], X_splits[2], "input0", store_path, args.dataset_name)
     fairseq_preprocess_cmd(y_splits[0], y_splits[1], y_splits[2], "label", store_path, args.dataset_name)

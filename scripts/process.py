@@ -1,6 +1,6 @@
-from scripts.process_moleculenet_new import X_splits
+import imp
 from sklearn.model_selection import train_test_split
-from scripts.utils import fairseq_preprocess_cmd, tokenize, create_raw, generateMurcoScaffold, getMurcoScaffoldList
+from utils import fairseq_preprocess_cmd, tokenize, create_raw, generateMurcoScaffold, getMurcoScaffoldList
 from sklearn.model_selection import KFold
 from itertools import chain
 import pandas as pd
@@ -10,8 +10,6 @@ import csv
 import os
 
 os.environ['MKL_THREADING_LAYER'] = 'GNU'
-
-
 
 def scaff(dataset_name, type):
 
@@ -280,7 +278,7 @@ def Ames_():
         fairseq_preprocess_cmd(FP_splits[0], FP_splits[1], FP_splits[2], "input1", store_path, f"{dataset_i}-fold")
         fairseq_preprocess_cmd(y_splits[0], y_splits[1], y_splits[2], "label", store_path, f"{dataset_i}-fold")
 
-Ames_()
+# Ames_()
 
 def MicroNucleose():
     
