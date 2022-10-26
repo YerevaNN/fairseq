@@ -33,23 +33,28 @@ def multi_task_predict(self, head: str, tokens: torch.LongTensor, return_logits:
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset-name', required=True,
+parser.add_argument('--dataset-name', 
+                        required=True,
                         help='dataset name.')
 parser.add_argument('--subtask',
                         help='subtask')
 parser.add_argument('--warmup-update',
-                        help='warmup update', default=46)
+                        help='warmup update', 
+                        default=46)
 parser.add_argument('--total-number-update',
-                        help='total number update', default=290)
+                        help='total number update', 
+                        default=290)
 parser.add_argument('--lr', default="5e-6",
                         help='learning rate')
-parser.add_argument('--dropout', default="0.3",
+parser.add_argument('--dropout', 
+                        default="0.3",
                         help='learning rate')
 parser.add_argument('--r3f',
                         help='learning rate')
 parser.add_argument('--noise_type',
                         help='learning rate')
-parser.add_argument('--checkpoint_name', default="chkpt_upper_bound_last_11_count_4.pt")
+parser.add_argument('--checkpoint_name', 
+                        default="checkpoint_best.pt")
 args = parser.parse_args()
 
 dataset = args.dataset_name #if args.dataset_name in set(["esol", "freesolv", "lipo", "Ames", "BBBP", "BACE", "HIV"]) else f"{args.dataset_name}_{args.subtask}"
