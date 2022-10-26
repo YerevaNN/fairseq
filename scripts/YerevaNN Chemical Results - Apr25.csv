@@ -1,16 +1,9 @@
-,Type,Experimental,Datasize,# of steps,# of subtasks,lr,Minutes to train 1 subtask,Hours to train all subtasks,dropout,noise_type,lambda
-
-
-Genotoxicity_3-fold,Classification,Yes,448,290,1,3e-5,25,0.4,0.1
-Genotoxicity_3-fold,Classification,Yes,448,290,1,3e-5,25,0.4,0.2
-Genotoxicity_3-fold,Classification,Yes,448,290,1,3e-5,25,0.4,0.3
-
-Genotoxicity_4-fold,Classification,Yes,448,290,1,5e-6,25,0.4,0.1
-Genotoxicity_4-fold,Classification,Yes,448,290,1,5e-6,25,0.4,0.2
-Genotoxicity_4-fold,Classification,Yes,448,290,1,5e-6,25,0.4,0.3
-Genotoxicity_4-fold,Classification,Yes,448,290,1,1e-5,25,0.4,0.1
-Genotoxicity_4-fold,Classification,Yes,448,290,1,1e-5,25,0.4,0.2
-Genotoxicity_4-fold,Classification,Yes,448,290,1,1e-5,25,0.4,0.3
-Genotoxicity_4-fold,Classification,Yes,448,290,1,3e-5,25,0.4,0.1
-Genotoxicity_4-fold,Classification,Yes,448,290,1,3e-5,25,0.4,0.2
-Genotoxicity_4-fold,Classification,Yes,448,290,1,3e-5,25,0.4,0.3
+,Type,Experimental,Datasize,# of steps,# of subtasks,lr,Minutes to train 1 subtask,Hours to train all subtasks,dropout,noise_type,lambdalipo,Regression,Yes,4200,21.0,1,5e-6,25.0,0.4,0.1
+lipo,Regression,Yes,4200,21.0,1,5e-6,25.0,0.4,0.2
+lipo,Regression,Yes,4200,21.0,1,5e-6,25.0,0.4,0.3
+lipo,Regression,Yes,4200,21.0,1,1e-5,25.0,0.4,0.1
+lipo,Regression,Yes,4200,21.0,1,1e-5,25.0,0.4,0.2
+lipo,Regression,Yes,4200,21.0,1,1e-5,25.0,0.4,0.3
+lipo,Regression,Yes,4200,21.0,1,3e-5,25.0,0.4,0.1
+lipo,Regression,Yes,4200,21.0,1,3e-5,25.0,0.4,0.2
+lipo,Regression,Yes,4200,21.0,1,3e-5,25.0,0.4,0.3
