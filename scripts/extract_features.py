@@ -1,26 +1,13 @@
-# from tkinter import N
-# from rdkit.Chem.Scaffolds.MurckoScaffold import MurckoScaffoldSmiles
-# from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
-from itertools import chain
-from pathlib import Path
-# from rdkit import Chem
-from sklearn import metrics
-import torch.nn as nn
+from fairseq.data.data_utils import load_indexed_dataset
 from fairseq.data.data_utils import collate_tokens
-
+from fairseq.models.bart import BARTModel
+from fairseq.data import Dictionary
+import torch.nn.functional as F 
 from tqdm import tqdm
-# import networkx as nx
-# import seaborn as sns
-import pandas as pd
 import numpy as np
-# import umap.plot
-import logging
-import torch
-import json
-# import umap
-import os
 import argparse
+import torch
+import os
 
 
 
@@ -39,11 +26,6 @@ if os.path.exists(np_filename):
     print(f"The file {np_filename} already exists")
     exit()
     
-
-from fairseq.data.data_utils import load_indexed_dataset
-from fairseq.models.bart import BARTModel
-from fairseq.data import Dictionary
-import torch.nn.functional as F 
 
 store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
 model = f"{store_path}/{dataset}/processed"
@@ -114,6 +96,4 @@ print("X.shape", X.shape)
 
 print(f"Saving to {np_filename}")
 np.save(np_filename, X)
-
-    
     
