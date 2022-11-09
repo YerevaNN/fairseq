@@ -38,7 +38,7 @@ parser.add_argument('--checkpoint_name', default="checkpoint_best.pt")
 args = parser.parse_args()
 
 
-dataset = args.dataset_name #if args.dataset_name in set(["esol", "freesolv", "lipo", "Ames", "BBBP", "BACE", "HIV"]) else f"{args.dataset_name}_{args.subtask}"
+dataset = args.dataset_name #if args.dataset_name in set(["esol", "freesolv", "lipo", "BBBP", "BACE", "HIV"]) else f"{args.dataset_name}_{args.subtask}"
 
 store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
 model = f"{store_path}/{dataset}/processed"

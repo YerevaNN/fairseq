@@ -1,4 +1,4 @@
-from process import Genotoxicity, cross_val
+from process import cross_val
 from utils import tokenize, create_raw, fairseq_preprocess_cmd
 from rdkit import Chem
 import deepchem as dc
