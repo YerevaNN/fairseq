@@ -1,8 +1,10 @@
-``` To fine-tune on MoleculeNet tasks
+To fine-tune on MoleculeNet tasks
 
-1) Download and preprocess MoleculNet datasets:  python process_datasets.py --dataset-name esol --is-MoleculeNet True from the /home/gayane/BartLM/fairseq/examples/molbart
-    This will create Folders in /home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data directory: 
 
+1) Download and preprocess MoleculeNet datasets: `python process_datasets.py --dataset-name esol --is-MoleculeNet True` from the `root/fairseq/examples/molbart`
+    This will create folders in `root/BARTSmiles/checkpoints/evaluation_data` directory: 
+
+```
     esol
     │
     ├───esol
@@ -51,8 +53,7 @@
         test.input
         valid.input
         train.input
-
-
+```
 
 
 2) Generate the grid of training hyperparameters /home/gayane/BartLM/fairseq/examples/molbart/generate_grid_bartsmiles.py. This will create a csv.
@@ -77,5 +78,3 @@ url
 gayanec/Fine_Tune_clintox_0/6p76cyzr
 
 6) Perform SWA and evaluate /home/gayane/BartLM/fairseq/examples/molbart/evaluate_swa_bartsmiles.py. This will produce a log file with output and averaged checkpoints respectivly in   /home/gayane/BartLM/Bart/chemical/log/  and /mnt/good/gayane/data/chkpt/clintox_1_bs_16_dropout_0.1_lr_5e-6_totalNum_739_warmup_118/ folders.
-
-```
