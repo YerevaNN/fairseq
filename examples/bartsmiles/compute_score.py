@@ -1,7 +1,6 @@
-from sklearn.metrics import roc_auc_score
 from utils import compute_rmse, compute_auc, compute_conf_matrix, multi_task_predict
 from fairseq.data.data_utils import load_indexed_dataset
-# from sklearn.linear_model import ridge_regression
+from sklearn.metrics import roc_auc_score
 from fairseq.models.bart import BARTModel
 from fairseq.data import Dictionary
 import torch.nn.functional as F 

@@ -1,11 +1,7 @@
-import imp
 from sklearn.model_selection import train_test_split
-from utils import fairseq_preprocess_cmd, tokenize, create_raw, generateMurcoScaffold, getMurcoScaffoldList
 from sklearn.model_selection import KFold
-from itertools import chain
 import pandas as pd
 import numpy as np
-import json
 import csv
 import os
 

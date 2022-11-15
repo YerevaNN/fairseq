@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-from re import sub
-import numpy as np
-import csv
-from torch import dropout
 from tqdm import tqdm
+import csv
 import os
 # os.environ['MKL_THREADING_LAYER'] = 'GNU'
 
