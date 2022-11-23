@@ -30,6 +30,7 @@ p.add_argument("--add-noise",
                     help="True or False")
 
 args = p.parse_args()
+root = "/home/gayane/BartLM"
 name = args.dataset_name
 ep = args.epoch
 bs = args.batch_size
@@ -37,6 +38,7 @@ dataset_size = int(args.dataset_size)
 subtask = args.subtasks
 subtask = 0 if args.single_task else subtask
 TOTAL_NUM_UPDATES = (dataset_size * 0.8) / (ep * bs)
+
 
 time_param = 5.2 / 7000
 
@@ -53,7 +55,7 @@ dropouts = [ 0.1, 0.2, 0.3 ]
 
 lmb = [0.1, 0.5, 1.0, 5.0]
 noise = ["uniform", "normal"]
-path = "/home/gayane/BartLM/fairseq/examples/bartsmiles/grid_search.csv"
+path = f"{root}/Bart/fairseq/examples/bartsmiles/grid_search.csv"
 with open(path, 'w') as f:
     head = ["","Type","Experimental","Datasize","# of steps","# of subtasks","lr","Minutes to train 1 subtask","Hours to train all subtasks","dropout","noise_type","lambda\n"]
     f.write(",".join(head))

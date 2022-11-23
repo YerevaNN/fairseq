@@ -38,12 +38,13 @@ args = parser.parse_args()
 
 
 dataset = args.dataset_name #if args.dataset_name in set(["esol", "freesolv", "lipo", "BBBP", "BACE", "HIV"]) else f"{args.dataset_name}_{args.subtask}"
-
-store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
+root = "/home/gayane/BartLM"
+disk = "/mnt/good/gayane/data/chkpt"
+store_path = f"{root}/chemical/checkpoints/evaluation_data"
 model = f"{store_path}/{dataset}/processed"
 
 
-with open('/home/gayane/BartLM/fairseq/examples/bartsmiles/datasets.json') as f:
+with open(f'{root}/Bart/fairseq/examples/bartsmiles/datasets.json') as f:
     datasets_json = json.load(f)
 dataset_js = datasets_json[dataset]
 task_type = dataset_js['type']
@@ -67,11 +68,11 @@ dataset_type = args.dataset_type
 
 noise_params = f"_noise_type_{noise_type}_r3f_lambda_{r3f_lambda}" if noise_type in ["uniform", "normal"] else ""
 
-chkpt_path = f"/mnt/good/gayane/data/chkpt/{dataset}_bs_16_dropout_{drout}_lr_{lr}_totalNum_{totNumUpdate}_warmup_{warmup}{noise_params}/{args.checkpoint_name}"
+chkpt_path = f"{disk}/{dataset}_bs_16_dropout_{drout}_lr_{lr}_totalNum_{totNumUpdate}_warmup_{warmup}{noise_params}/{args.checkpoint_name}"
 print(f"checkpoint path: {chkpt_path}") 
 bart = BARTModel.from_pretrained(model,  checkpoint_file = chkpt_path, 
                                  bpe="sentencepiece",
-                                 sentencepiece_model="/home/gayane/BartLM/Bart/chemical/tokenizer/chem.model")
+                                 sentencepiece_model=f"{root}/chemical/tokenizer/chem.model")
 bart.eval()
 bart.cuda(device=1)
 
@@ -143,7 +144,7 @@ else:
     d = {"SMILES": sm, "prediction": y_pred , "y_true": y }
     df = pd.DataFrame(d) 
     df = df.dropna()
-    df.to_csv(f"/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data/{args.dataset_name}/{args.dataset_name}_test_.csv")     
+    df.to_csv(f"{root}/chemical/checkpoints/evaluation_data/{args.dataset_name}/{args.dataset_name}_test_.csv")     
 
 if task_type == 'classification':
     if len(dataset_js["class_index"]) >1:

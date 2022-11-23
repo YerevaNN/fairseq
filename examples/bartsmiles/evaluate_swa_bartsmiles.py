@@ -7,7 +7,8 @@ import os
 
 os.environ['MKL_THREADING_LAYER'] = 'GNU'
 
-with open('/home/gayane/BartLM/fairseq/examples/bartsmiles/wandb_url.csv') as f:
+root = "/home/gayane/BartLM"
+with open(f'{root}/Bart/fairseq/examples/bartsmiles/wandb_url.csv') as f:
     r = csv.DictReader(f)
     lines = [row for row in r]
     print(f"------------> {lines}")
@@ -47,7 +48,7 @@ for i, task in zip(range(len(lines)),tqdm(lines)):
             "batch_size" : batch_size,
             "save_dir" : save_dir,
             "name" : name,
-            "path_of_history": f'/home/gayane/BartLM/Bart/chemical/checkpoints/training_results_csv/{name}.csv',
+            "path_of_history": f'{root}/chemical/checkpoints/training_results_csv/{name}.csv',
             'wandb_id' : task['url'],
             'is_regression' : is_regress,
             "r3f": r3f,
@@ -72,9 +73,9 @@ for i, task in zip(range(len(lines)),tqdm(lines)):
 
 
     df_summ = df_summ[df_summ['valid/loss'].notna()]
-    df_summ.reset_index().to_csv(f'/home/gayane/BartLM/Bart/chemical/checkpoints/train_params_csv/{name}.csv')
+    df_summ.reset_index().to_csv(f'{root}/chemical/checkpoints/train_params_csv/{name}.csv')
 
-df.to_csv(f'/home/gayane/BartLM/Bart/chemical/checkpoints/training_results_csv/wandb_path.csv')
+df.to_csv(f'{root}/chemical/checkpoints/training_results_csv/wandb_path.csv')
 
 
 
@@ -93,14 +94,14 @@ for i in lines:
 best_val_loss = []
 best_val_accuracy = []
 for name in names:
-    params_df = pd.read_csv(f'/home/gayane/BartLM/Bart/chemical/checkpoints/train_params_csv/{name}.csv')
+    params_df = pd.read_csv(f'{root}/chemical/checkpoints/train_params_csv/{name}.csv')
 
     best_val_loss.append(params_df['valid/loss'].argmin(skipna=True) +1 )
     best_val_accuracy.append(params_df['valid/loss'].argmax(skipna=True) + 1)
 
 
-train_sum = pd.read_csv(f'/home/gayane/BartLM/Bart/chemical/checkpoints/training_results_csv/wandb_path.csv')
-savePath = "/mnt/good/gayane/data/chkpt/"
+train_sum = pd.read_csv(f'{root}/chemical/checkpoints/training_results_csv/wandb_path.csv')
+disk = "/mnt/good/gayane/data/chkpt/"
 
 for i in range(len(names)):
     n = names[i]
@@ -123,20 +124,20 @@ for i in range(len(names)):
     chkpt_name_best_val_acc = f"chkpt_upper_bound_best_val_acc_{upper_bound_best_val_acc}_count_{chkpt_count}"
     chkpt_name_last = f"chkpt_upper_bound_last_{upper_bound_last}_count_{chkpt_count}"
     
-    directory = f"{savePath}{n}"
+    directory = f"{disk}{n}"
     task_name = n.split("_")[0] + '_' + n.split("_")[1] if n.split("_")[1].split('-')[0].isdigit() or n.split("_")[1].isdigit() else n.split("_")[0]
     is_regress = row['is_regression']
     noise_params = f" --noise_type {noise_type} --r3f {r3f_lambda}" if noise_type in ["uniform", "normal"] else ""
-    cmd = f"""python /home/gayane/BartLM/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout}{noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name checkpoint_best.pt >> /home/gayane/BartLM/Bart/chemical/log/{task_name}.log""" 
+    cmd = f"""python {root}/Bart/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout}{noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name checkpoint_best.pt >> {root}/chemical/log/{task_name}.log""" 
     print("---------------------> chkpt_name_best_val_loss: ", cmd)
     os.system(cmd)
-    cmd = f"""python /home/gayane/BartLM/fairseq/examples/bartsmiles/average_checkpoints.py--dataset-type test --inputs {directory}/ --output {directory}/{chkpt_name_best_val_loss}.pt --checkpoint-upper-bound {upper_bound_best_val_loss} --num-epoch-checkpoints {chkpt_count}""" 
+    cmd = f"""python {root}/Bart/fairseq/examples/bartsmiles/average_checkpoints.py--dataset-type test --inputs {directory}/ --output {directory}/{chkpt_name_best_val_loss}.pt --checkpoint-upper-bound {upper_bound_best_val_loss} --num-epoch-checkpoints {chkpt_count}""" 
     print("---------------------> chkpt_name_best_val_loss SWA: ")
     print(cmd)
     os.system(cmd)
 
     
-    cmd = f"""python /home/gayane/BartLM/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout} {noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_best_val_loss}.pt >> /home/gayane/BartLM/Bart/chemical/log/{task_name}.log""" 
+    cmd = f"""python {root}/Bart/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout} {noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_best_val_loss}.pt >> {root}/chemical/log/{task_name}.log""" 
     print("---------------------> chkpt_name_best_val_loss SWA score: ", cmd)
     os.system(cmd)
 
@@ -144,27 +145,27 @@ for i in range(len(names)):
 
     # if not is_regress[0]:
 
-    cmd = f"""python /home/gayane/BartLM/fairseq/examples/bartsmiles/average_checkpoints.py --inputs {directory}/ --output {directory}/{chkpt_name_best_val_acc}.pt --checkpoint-upper-bound {upper_bound_best_val_acc} --num-epoch-checkpoints {chkpt_count}""" 
+    cmd = f"""python {root}/Bart/fairseq/examples/bartsmiles/average_checkpoints.py --inputs {directory}/ --output {directory}/{chkpt_name_best_val_acc}.pt --checkpoint-upper-bound {upper_bound_best_val_acc} --num-epoch-checkpoints {chkpt_count}""" 
     print("---------------------> chkpt_name_best_val_acc SWA: ", cmd)
     os.system(cmd)
 
 
-    cmd = f"""python /home/gayane/BartLM/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout} {noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_best_val_acc}.pt >> /home/gayane/BartLM/Bart/chemical/log/{task_name}.log""" 
+    cmd = f"""python {root}/Bart/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout} {noise_params} --dataset-name {task_name} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_best_val_acc}.pt >> {root}/chemical/log/{task_name}.log""" 
     print("---------------------> chkpt_name_best_val_acc SWA score: ", cmd)
     os.system(cmd)
 
 
-    cmd = f"""python /home/gayane/BartLM/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout} --dataset-name {task_name} {noise_params} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name checkpoint{best_val_accuracy[i]}.pt >> /home/gayane/BartLM/Bart/chemical/log/{task_name}.log""" 
+    cmd = f"""python {root}/Bart/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout} --dataset-name {task_name} {noise_params} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name checkpoint{best_val_accuracy[i]}.pt >> {root}/chemical/log/{task_name}.log""" 
     print("--------------------->  chkpt_name_best_val_acc score: ")
     print(cmd)
     os.system(cmd)
 
-    cmd = f"""python /home/gayane/BartLM/fairseq/examples/bartsmiles/average_checkpoints.py --inputs {directory}/ --output {directory}/{chkpt_name_last}.pt --checkpoint-upper-bound 11 --num-epoch-checkpoints {chkpt_count}""" 
+    cmd = f"""python {root}/Bart/fairseq/examples/bartsmiles/average_checkpoints.py --inputs {directory}/ --output {directory}/{chkpt_name_last}.pt --checkpoint-upper-bound 11 --num-epoch-checkpoints {chkpt_count}""" 
     print(" --------------------> last checkpoints SWA: ", cmd)
     os.system(cmd)
 
 
-    cmd = f"""python /home/gayane/BartLM/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout} --dataset-name {task_name} {noise_params} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_last}.pt >> /home/gayane/BartLM/Bart/chemical/log/{task_name}.log""" 
+    cmd = f"""python {root}/Bart/fairseq/examples/bartsmiles/compute_score.py --lr {lr} --dropout {drout} --dataset-name {task_name} {noise_params} --subtask 1 --warmup-update {warmup_updates} --total-number-update {total_num_update} --checkpoint_name {chkpt_name_last}.pt >> {root}/chemical/log/{task_name}.log""" 
     print(" --------------------> last checkpoints SWA score: ")
     print(cmd)
     os.system(cmd)

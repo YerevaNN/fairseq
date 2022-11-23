@@ -17,21 +17,19 @@ p = argparse.ArgumentParser(description=__doc__,
 # p.add_argument("--input", help="input file", type=str, required=True)
 p.add_argument("--dataset-name", type=str, required=True)
 p.add_argument("--delimiter", type=str, default=",")
-p.add_argument("--is-canonical", default=False, 
-                        help="True or False")
 p.add_argument("--is-MoleculeNet", help="MoleculeNet", default=False)
 
 args = p.parse_args()
 
 np.random.seed(123)
 
-with open('/home/gayane/BartLM/fairseq/examples/bartsmiles/datasets.json') as f:
+with open('/home/gayane/BartLM/Bart/fairseq/examples/bartsmiles/datasets.json') as f:
     datasets_json = json.load(f)
 
 dataset = datasets_json[args.dataset_name]
 si = dataset['smiles_index']
-input_path = "/home/gayane/BartLM"
-store_path = "/home/gayane/BartLM/Bart/chemical/checkpoints/evaluation_data"
+input_path = "/home/gayane/BartLM/Bart"
+store_path = "/home/gayane/BartLM/chemical/checkpoints/evaluation_data"
 
 if len(dataset["class_index"]) > 1:
     path = list()
@@ -136,10 +134,6 @@ if dataset["type"] == "classification":
         class_val = list(map(int, valid_df.iloc[:, ci].tolist()))
         class_test = list(map(int, test_df.iloc[:, ci].tolist()))
 
-if not args.is_canonical:
-    train_df.iloc[:, si] = train_df.iloc[:, si].apply(Chem.CanonSmiles)
-    valid_df.iloc[:, si] = valid_df.iloc[:, si].apply(Chem.CanonSmiles)
-    test_df.iloc[:, si] = test_df.iloc[:, si].apply(Chem.CanonSmiles)
 
 smiles_train = list(map(str, train_df.iloc[:, si].tolist()))
 smiles_val = list(map(str, valid_df.iloc[:, si].tolist()))
